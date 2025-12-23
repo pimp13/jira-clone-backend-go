@@ -12,7 +12,13 @@ var (
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString, Size: 195},
+		{Name: "password", Type: field.TypeString},
 		{Name: "is_active", Type: field.TypeBool, Nullable: true, Default: true},
+		{Name: "avatar_url", Type: field.TypeString, Nullable: true},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"USER", "ADMIN"}, Default: "USER"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -28,7 +34,7 @@ var (
 			{
 				Name:    "user_is_active",
 				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[2]},
+				Columns: []*schema.Column{UsersColumns[4]},
 			},
 		},
 	}

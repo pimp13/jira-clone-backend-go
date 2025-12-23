@@ -25,6 +25,6 @@ func (ac *AuthController) Routes(r *echo.Group) {
 func (ac *AuthController) GetForTest(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{
 		"ok":   true,
-		"data": ac.authService.GetForTestInService("Pouya"),
+		"data": "sfdsf",
 	})
 }

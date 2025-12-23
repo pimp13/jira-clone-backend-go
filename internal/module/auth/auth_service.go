@@ -1,21 +1,21 @@
 package auth
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/pimp13/jira-clone-backend-go/ent"
 )
 
-type AuthService struct {
+type AuthService interface {
+	Register(ctx context.Context)
+}
+
+type authService struct {
 	client *ent.Client
 }
 
 func NewAuthService(client *ent.Client) *AuthService {
-	return &AuthService{
+	return &authService{
 		client,
 	}
-}
-
-func (as *AuthService) GetForTestInService(name string) string {
-	return fmt.Sprintf("Hello, %s", name)
 }
