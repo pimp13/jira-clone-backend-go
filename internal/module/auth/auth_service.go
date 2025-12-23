@@ -7,6 +7,7 @@ import (
 	"github.com/pimp13/jira-clone-backend-go/ent"
 	"github.com/pimp13/jira-clone-backend-go/ent/user"
 	"github.com/pimp13/jira-clone-backend-go/pkg/res"
+	"github.com/pimp13/jira-clone-backend-go/pkg/util"
 )
 
 type AuthService interface {
@@ -31,7 +32,20 @@ func (as *authService) Register(ctx context.Context, bodyData *RegisterUserDto) 
 	if existsByEmail {
 		return res.ErrorMessage[struct{}]("email is exists", http.StatusBadRequest)
 	}
-	return res.SuccessMessage("ok")
+
+	hashed, err := util.HashPassword(bodyData.Password)
+	if err != nil {
+		return res.ErrorMessage[struct{}]("error in hash password")
+	}
+
+	if _, err = as.client.User.Create().
+		SetEmail(bodyData.Email).
+		SetName(bodyData.Name).
+		SetPassword(hashed).
+		Save(ctx); err != nil {
+		return res.ErrorMessage[struct{}]("error in register user")
+	}
+	return res.SuccessMessage("register user is successfully!")
 }
 
 func (as *authService) userExistsByEmail(ctx context.Context, email string) (bool, error) {

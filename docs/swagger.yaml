@@ -1,17 +1,40 @@
 basePath: /api
+definitions:
+  auth.RegisterUserDto:
+    properties:
+      email:
+        type: string
+      name:
+        minLength: 3
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
 info:
   contact: {}
   description: This is a jira clone api docs.
   title: jira clone api
   version: "1.0"
 paths:
-  /v1/auth:
-    get:
+  /v1/auth/register:
+    post:
       consumes:
       - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterUserDto'
       produces:
       - application/json
       responses: {}
       tags:
-      - users
+      - '[Auth] {v1}'
 swagger: "2.0"

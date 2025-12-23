@@ -15,8 +15,8 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/v1/auth": {
-            "get": {
+        "/v1/auth/register": {
+            "post": {
                 "consumes": [
                     "application/json"
                 ],
@@ -24,9 +24,43 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "[Auth] {v1}"
+                ],
+                "parameters": [
+                    {
+                        "description": "request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.RegisterUserDto"
+                        }
+                    }
                 ],
                 "responses": {}
+            }
+        }
+    },
+    "definitions": {
+        "auth.RegisterUserDto": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 3
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
             }
         }
     }

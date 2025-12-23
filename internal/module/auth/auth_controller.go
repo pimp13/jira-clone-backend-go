@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/pimp13/jira-clone-backend-go/pkg/res"
 )
 
 type AuthController struct {
@@ -15,16 +16,21 @@ func NewAuthController(authService AuthService) *AuthController {
 }
 
 func (ac *AuthController) Routes(r *echo.Group) {
-	r.GET("/auth", ac.GetForTest)
+	r.POST("/auth/register", ac.handleRegister)
 }
 
-// @Tags		users
+// @Tags		[Auth] {v1}
 // @Accept		json
 // @Produce	json
-// @Router		/v1/auth [GET]
-func (ac *AuthController) GetForTest(c echo.Context) error {
-	return c.JSON(http.StatusOK, echo.Map{
-		"ok":   true,
-		"data": "sfdsf",
-	})
+// @Param		request	body	RegisterUserDto	true	"request body"
+// @Router		/v1/auth/register [POST]
+func (ac *AuthController) handleRegister(c echo.Context) error {
+	var bodyData RegisterUserDto
+	if err := c.Bind(&bodyData); err != nil {
+		return c.JSON(http.StatusBadRequest, res.Error[struct{}](err, http.StatusBadRequest))
+	}
+
+	resp := ac.authService.Register(c.Request().Context(), &bodyData)
+
+	return res.JSON(c, resp)
 }
