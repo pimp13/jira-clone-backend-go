@@ -4,8 +4,8 @@ tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "bin\\jira-clone-backend.exe"
-  cmd = "make build"
+  bin = "bin\\server.exe"
+  cmd = "go build -o ./bin/server.exe ./cmd/server/main.go"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []

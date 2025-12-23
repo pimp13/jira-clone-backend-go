@@ -1,5 +1,5 @@
-MAIN_FILE = ./cmd/api-server/main.go
-BUILD_FILE = ./bin/api-server.exe
+MAIN_FILE = ./cmd/server/main.go
+BUILD_FILE = ./bin/server.exe
 SWAGGER_DOCS_DIR = ./docs
 WIRE_LOCATION = ./internal/infrastructure/di
 
