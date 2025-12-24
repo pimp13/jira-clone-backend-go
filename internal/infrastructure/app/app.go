@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/pimp13/jira-clone-backend-go/ent"
 	"github.com/pimp13/jira-clone-backend-go/internal/infrastructure/config"
 	"github.com/pimp13/jira-clone-backend-go/internal/infrastructure/db"
@@ -40,6 +41,8 @@ func NewApp() *App {
 }
 
 func (a *App) Bootstrap() error {
+	a.setupMiddlewares()
+
 	a.engine.GET("/api/docs/*", echoSwagger.WrapHandler)
 	a.engine.GET("/api/docs", func(c echo.Context) error {
 		return c.Redirect(http.StatusOK, "/api/docs/index.html")
@@ -52,4 +55,29 @@ func (a *App) Bootstrap() error {
 
 	addr := fmt.Sprintf(":%v", a.port)
 	return a.engine.Start(addr)
+}
+
+func (a *App) setupMiddlewares() {
+	a.engine.Use(middleware.Logger())
+
+	a.engine.Use(middleware.Recover())
+
+	a.engine.Use(middleware.Static("/public"))
+
+	a.engine.Static("/public", "public")
+
+	a.engine.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{
+			a.cfg.App.FrontendURL,
+		},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		AllowMethods: []string{
+			http.MethodGet,
+			http.MethodPut,
+			http.MethodPost,
+			http.MethodDelete,
+			http.MethodPatch,
+		},
+		AllowCredentials: true,
+	}))
 }

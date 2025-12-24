@@ -72,9 +72,9 @@ func ValidateRequest[T DTO](c echo.Context, input *T) (*ValidationBindResponse, 
 func getValidateErrMsg(fe validator.FieldError) string {
 	switch fe.Tag() {
 	case "required":
-		return "این فیلد الزامی است"
+		return "feild is required"
 	case "email":
-		return "فرمت ایمیل نامعتبر است"
+		return "email format is invalid"
 	case "min":
 		return fmt.Sprintf("حداقل طول باید %s باشد", fe.Param())
 	case "max":

@@ -26,16 +26,15 @@ func (ac *AuthController) Routes(r *echo.Group) {
 // @Router		/v1/auth/register [POST]
 func (ac *AuthController) handleRegister(c echo.Context) error {
 	var bodyData RegisterUserDto
-	if err := c.Bind(&bodyData); err != nil {
-		return c.JSON(http.StatusBadRequest, res.Error[struct{}](err, http.StatusBadRequest))
-	}
-
-	file, err := c.FormFile("image")
+	validateErrs, err := res.ValidateRequest(c, &bodyData)
 	if err != nil {
-		return res.JSON(c, res.ErrorResponse[struct{}]("failed to get image", err))
+		return res.JSON(c, res.ErrorMessage[struct{}]("failed to validate", http.StatusBadRequest))
+	}
+	if validateErrs != nil {
+		return c.JSON(http.StatusBadRequest, validateErrs)
 	}
 
-	resp := ac.authService.Register(c.Request().Context(), &bodyData, file)
+	resp := ac.authService.Register(c.Request().Context(), &bodyData)
 
 	return res.JSON(c, resp)
 }
