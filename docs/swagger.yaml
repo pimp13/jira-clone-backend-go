@@ -32,6 +32,17 @@ info:
   title: jira clone api
   version: "1.0"
 paths:
+  /v1/auth/info:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - '[Auth] {v1}'
   /v1/auth/login:
     post:
       consumes:

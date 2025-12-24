@@ -1,6 +1,8 @@
 package auth
 
-import "github.com/pimp13/jira-clone-backend-go/ent"
+import (
+	"github.com/pimp13/jira-clone-backend-go/ent"
+)
 
 // Requests
 type RegisterUserDto struct {

@@ -18,7 +18,7 @@ type JWTService interface {
 
 	ParseAccessToken(tokenStr string) (*Claims, error)
 
-	GetUserByID(ctx context.Context, userID uuid.UUID) (*ent.User, error)
+	GetUserByID(ctx context.Context, userID uuid.UUID) (*UserInfo, error)
 }
 
 type jwtService struct {
@@ -101,8 +101,23 @@ func (s *jwtService) ParseAccessToken(tokenStr string) (*Claims, error) {
 	return nil, jwtpkg.ErrTokenInvalidClaims
 }
 
-func (s *jwtService) GetUserByID(ctx context.Context, userID uuid.UUID) (*ent.User, error) {
-	return s.client.User.Query().
+func (s *jwtService) GetUserByID(ctx context.Context, userID uuid.UUID) (*UserInfo, error) {
+	user, err := s.client.User.Query().
 		Where(user.IDEQ(userID)).
 		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UserInfo{
+		ID:        user.ID,
+		Email:     user.Email,
+		Name:      user.Name,
+		Password:  user.Password,
+		IsActive:  user.IsActive,
+		AvatarURL: user.AvatarURL,
+		Role:      user.Role,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}, nil
 }

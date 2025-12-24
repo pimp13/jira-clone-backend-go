@@ -52,9 +52,11 @@ func (a *App) Bootstrap() error {
 	api_v1 := a.engine.Group(a.prefix + "/v1")
 
 	// Register services
+	// AUTH SERVICES
 	jwtService := jwt.NewJWTService(a.entClient, a.cfg)
+	authMiddleware := auth.NewAuthMiddleware(jwtService)
 	authService := auth.NewAuthService(a.entClient, jwtService)
-	authController := auth.NewAuthController(authService)
+	authController := auth.NewAuthController(authService, authMiddleware)
 	authController.Routes(api_v1)
 
 	addr := fmt.Sprintf(":%v", a.port)

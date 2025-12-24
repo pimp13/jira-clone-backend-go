@@ -6,19 +6,25 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pimp13/jira-clone-backend-go/internal/infrastructure/config"
 	"github.com/pimp13/jira-clone-backend-go/pkg/res"
+	"github.com/pimp13/jira-clone-backend-go/pkg/util"
 )
 
 type AuthController struct {
-	authService AuthService
+	authService    AuthService
+	authMiddleware AuthMiddleware
 }
 
-func NewAuthController(authService AuthService) *AuthController {
-	return &AuthController{authService}
+func NewAuthController(authService AuthService, authMiddleware AuthMiddleware) *AuthController {
+	return &AuthController{
+		authService,
+		authMiddleware,
+	}
 }
 
 func (ac *AuthController) Routes(r *echo.Group) {
 	r.POST("/auth/register", ac.handleRegister)
 	r.POST("/auth/login", ac.handleLogin)
+	r.GET("/auth/info", ac.handleUserInfo, ac.authMiddleware.SetAuthMiddleware)
 }
 
 // @Tags		[Auth] {v1}
@@ -74,4 +80,18 @@ func (ac *AuthController) handleLogin(c echo.Context) error {
 	})
 
 	return c.JSON(resp.StatusCode, resp)
+}
+
+// @Tags		[Auth] {v1}
+// @Accept		json
+// @Produce	json
+// @Router		/v1/auth/info [GET]
+// @Security	ApiKeyAuth
+func (ac *AuthController) handleUserInfo(c echo.Context) error {
+	user, err := util.GetCurrentUser(c)
+	if err != nil {
+		return res.JSON(c, res.ErrorMessage[struct{}]("you unauth", http.StatusUnauthorized))
+	}
+
+	return res.JSON(c, res.SuccessResponse(user, "you is logged!"))
 }
