@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/pimp13/jira-clone-backend-go/ent/user"
+	"github.com/pimp13/jira-clone-backend-go/ent/workspace"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -121,6 +122,21 @@ func (_c *UserCreate) SetNillableID(v *uuid.UUID) *UserCreate {
 		_c.SetID(*v)
 	}
 	return _c
+}
+
+// AddWorkspaceIDs adds the "workspaces" edge to the Workspace entity by IDs.
+func (_c *UserCreate) AddWorkspaceIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddWorkspaceIDs(ids...)
+	return _c
+}
+
+// AddWorkspaces adds the "workspaces" edges to the Workspace entity.
+func (_c *UserCreate) AddWorkspaces(v ...*Workspace) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddWorkspaceIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -286,6 +302,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := _c.mutation.WorkspacesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.WorkspacesTable,
+			Columns: []string{user.WorkspacesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workspace.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

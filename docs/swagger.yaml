@@ -75,4 +75,15 @@ paths:
       responses: {}
       tags:
       - '[Auth] {v1}'
+  /v1/workspace:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - '[Workspace] {v1}'
 swagger: "2.0"

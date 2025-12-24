@@ -38,11 +38,49 @@ var (
 			},
 		},
 	}
+	// WorkspacesColumns holds the columns for the "workspaces" table.
+	WorkspacesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Size: 195},
+		{Name: "slug", Type: field.TypeString, Unique: true, Size: 195},
+		{Name: "image_url", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "owner_id", Type: field.TypeUUID},
+	}
+	// WorkspacesTable holds the schema information for the "workspaces" table.
+	WorkspacesTable = &schema.Table{
+		Name:       "workspaces",
+		Columns:    WorkspacesColumns,
+		PrimaryKey: []*schema.Column{WorkspacesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "workspaces_users_workspaces",
+				Columns:    []*schema.Column{WorkspacesColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "workspace_slug",
+				Unique:  true,
+				Columns: []*schema.Column{WorkspacesColumns[2]},
+			},
+			{
+				Name:    "workspace_owner_id",
+				Unique:  false,
+				Columns: []*schema.Column{WorkspacesColumns[6]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		UsersTable,
+		WorkspacesTable,
 	}
 )
 
 func init() {
+	WorkspacesTable.ForeignKeys[0].RefTable = UsersTable
 }

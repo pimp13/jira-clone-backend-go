@@ -12,6 +12,7 @@ import (
 	"github.com/pimp13/jira-clone-backend-go/internal/infrastructure/db"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/auth"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/jwt"
+	"github.com/pimp13/jira-clone-backend-go/internal/module/workspace"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
@@ -58,6 +59,11 @@ func (a *App) Bootstrap() error {
 	authService := auth.NewAuthService(a.entClient, jwtService)
 	authController := auth.NewAuthController(authService, authMiddleware)
 	authController.Routes(api_v1)
+
+	// WORKSPACE SERVICES
+	workspaceService := workspace.NewWorkspaceService(a.entClient)
+	workspaceController := workspace.NewWorkspaceController(workspaceService, authMiddleware)
+	workspaceController.Routes(api_v1)
 
 	addr := fmt.Sprintf(":%v", a.port)
 	return a.engine.Start(addr)
