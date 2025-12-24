@@ -30,7 +30,12 @@ func (ac *AuthController) handleRegister(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, res.Error[struct{}](err, http.StatusBadRequest))
 	}
 
-	resp := ac.authService.Register(c.Request().Context(), &bodyData)
+	file, err := c.FormFile("image")
+	if err != nil {
+		return res.JSON(c, res.ErrorResponse[struct{}]("failed to get image", err))
+	}
+
+	resp := ac.authService.Register(c.Request().Context(), &bodyData, file)
 
 	return res.JSON(c, resp)
 }
