@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/pimp13/jira-clone-backend-go/internal/infrastructure/config"
 	"github.com/pimp13/jira-clone-backend-go/pkg/res"
 )
 
@@ -17,6 +18,7 @@ func NewAuthController(authService AuthService) *AuthController {
 
 func (ac *AuthController) Routes(r *echo.Group) {
 	r.POST("/auth/register", ac.handleRegister)
+	r.POST("/auth/login", ac.handleLogin)
 }
 
 // @Tags		[Auth] {v1}
@@ -37,4 +39,39 @@ func (ac *AuthController) handleRegister(c echo.Context) error {
 	resp := ac.authService.Register(c.Request().Context(), &bodyData)
 
 	return res.JSON(c, resp)
+}
+
+// @Tags		[Auth] {v1}
+// @Accept		json
+// @Produce	json
+// @Param		request	body	LoginUserDto	true	"request body"
+// @Router		/v1/auth/login [POST]
+func (ac *AuthController) handleLogin(c echo.Context) error {
+	var bodyData LoginUserDto
+	validateResp, err := res.ValidateRequest(c, &bodyData)
+	if err != nil {
+		return res.JSON(c, res.ErrorMessage[struct{}]("failed to validate", http.StatusBadRequest))
+	}
+	if validateResp != nil {
+		return c.JSON(http.StatusBadRequest, validateResp)
+	}
+
+	resp := ac.authService.Login(c.Request().Context(), &bodyData)
+
+	if !resp.OK {
+		return c.JSON(resp.StatusCode, resp)
+	}
+
+	c.SetCookie(&http.Cookie{
+		Name:     config.Envs.App.AuthCookieName,
+		Value:    resp.Data.AccessToken,
+		Path:     "/",
+		Domain:   config.Envs.App.Url,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   258000000,
+	})
+
+	return c.JSON(resp.StatusCode, resp)
 }

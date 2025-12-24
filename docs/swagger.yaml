@@ -1,5 +1,16 @@
 basePath: /api
 definitions:
+  auth.LoginUserDto:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
   auth.RegisterUserDto:
     properties:
       email:
@@ -21,6 +32,22 @@ info:
   title: jira clone api
   version: "1.0"
 paths:
+  /v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginUserDto'
+      produces:
+      - application/json
+      responses: {}
+      tags:
+      - '[Auth] {v1}'
   /v1/auth/register:
     post:
       consumes:

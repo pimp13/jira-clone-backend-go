@@ -11,6 +11,7 @@ import (
 	"github.com/pimp13/jira-clone-backend-go/internal/infrastructure/config"
 	"github.com/pimp13/jira-clone-backend-go/internal/infrastructure/db"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/auth"
+	"github.com/pimp13/jira-clone-backend-go/internal/module/jwt"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
@@ -49,7 +50,10 @@ func (a *App) Bootstrap() error {
 	})
 
 	api_v1 := a.engine.Group(a.prefix + "/v1")
-	authService := auth.NewAuthService(a.entClient)
+
+	// Register services
+	jwtService := jwt.NewJWTService(a.entClient, a.cfg)
+	authService := auth.NewAuthService(a.entClient, jwtService)
 	authController := auth.NewAuthController(authService)
 	authController.Routes(api_v1)
 
@@ -58,19 +62,18 @@ func (a *App) Bootstrap() error {
 }
 
 func (a *App) setupMiddlewares() {
-	a.engine.Use(middleware.Logger())
-
-	a.engine.Use(middleware.Recover())
-
-	a.engine.Use(middleware.Static("/public"))
-
-	a.engine.Static("/public", "public")
 
 	a.engine.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{
 			a.cfg.App.FrontendURL,
 		},
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			"Authorization",
+			"X-Requested-With",
+		},
 		AllowMethods: []string{
 			http.MethodGet,
 			http.MethodPut,
@@ -80,4 +83,13 @@ func (a *App) setupMiddlewares() {
 		},
 		AllowCredentials: true,
 	}))
+
+	a.engine.Use(middleware.Logger())
+
+	a.engine.Use(middleware.Recover())
+
+	a.engine.Use(middleware.Static("/public"))
+
+	a.engine.Static("/public", "public")
+
 }

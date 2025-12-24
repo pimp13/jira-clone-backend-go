@@ -22,11 +22,11 @@ dev: ## Run server in development mode
 	@echo "Running server in development mode"
 	@air -c .air.toml
 
-swag: ## Create swagger document
+swag: swag-fmt ## Create swagger document
 	@echo "Creating swagger document..."
 	@swag init -g $(MAIN_FILE) --output $(SWAGGER_DOCS_DIR)
 
-build: swag swag-fmt ## Build application binary and swagger docs (includes swag-fmt)
+build: swag ## Build application binary and swagger docs (includes swag-fmt)
 	@echo "Building application..."
 	@go build -o $(BUILD_FILE) $(MAIN_FILE)
 
