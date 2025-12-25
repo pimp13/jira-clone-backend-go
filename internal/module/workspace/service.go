@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"mime/multipart"
+	"net/http"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/pimp13/jira-clone-backend-go/ent"
 	entWorkspace "github.com/pimp13/jira-clone-backend-go/ent/workspace"
@@ -14,7 +16,7 @@ import (
 )
 
 type WorkspaceService interface {
-	Index(ctx context.Context)
+	Index(ctx context.Context, userId uuid.UUID) *res.Response[[]*WorkspaceResponse]
 
 	Create(
 		ctx context.Context,
@@ -36,7 +38,27 @@ func NewWorkspaceService(client *ent.Client) WorkspaceService {
 	}
 }
 
-func (s *workspaceService) Index(ctx context.Context) {}
+func (s *workspaceService) Index(ctx context.Context, userId uuid.UUID) *res.Response[[]*WorkspaceResponse] {
+	data, err := s.client.Workspace.Query().
+		Where(entWorkspace.OwnerIDEQ(userId)).
+		WithOwner().
+		Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
+		All(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return res.ErrorMessage[[]*WorkspaceResponse]("workspace is not found", http.StatusBadRequest)
+		}
+		return res.ErrorMessage[[]*WorkspaceResponse]("failed to get workspace")
+	}
+
+	finalData := make([]*WorkspaceResponse, 0, len(data))
+	for _, ws := range data {
+		finalData = append(finalData, ToWorkspaceResponse(ws))
+	}
+
+	return res.SuccessResponse(finalData, "")
+}
 
 func (s *workspaceService) Create(
 	ctx context.Context,
@@ -71,7 +93,7 @@ func (s *workspaceService) Create(
 		return res.ErrorResponse[struct{}]("failed to save workspace", err)
 	}
 
-	return res.SuccessMessage("workspace is saved by successfully!")
+	return res.SuccessMessage("workspace is saved by successfully!", http.StatusCreated)
 }
 
 func (s *workspaceService) generateUniqueSlug(ctx context.Context, title string) (string, error) {

@@ -15,17 +15,22 @@ type Response[T any] struct {
 	Error      *string `json:"error,omitempty"`
 }
 
-func SuccessResponse[T any](data T, message string) *Response[T] {
-	return &Response[T]{
-		OK:         true,
-		Message:    message,
-		Data:       data,
-		StatusCode: http.StatusOK,
+func SuccessResponse[T any](data T, message string, statusCode ...int) *Response[T] {
+	resp := &Response[T]{
+		OK:      true,
+		Message: message,
+		Data:    data,
 	}
+	if len(statusCode) > 0 {
+		resp.StatusCode = statusCode[0]
+	} else {
+		resp.StatusCode = http.StatusOK
+	}
+	return resp
 }
 
-func SuccessMessage(message string) *Response[struct{}] {
-	return SuccessResponse(struct{}{}, message)
+func SuccessMessage(message string, statusCode ...int) *Response[struct{}] {
+	return SuccessResponse(struct{}{}, message, statusCode...)
 }
 
 func ErrorResponse[T any](message string, err error, statusCode ...int) *Response[T] {

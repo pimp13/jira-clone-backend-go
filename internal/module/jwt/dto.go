@@ -23,13 +23,13 @@ type UserInfo struct {
 	// Password holds the value of the "password" field.
 	Password string `json:"-"`
 	// IsActive holds the value of the "is_active" field.
-	IsActive *bool `json:"is_active,omitempty"`
+	IsActive *bool `json:"isActive,omitempty"`
 	// AvatarURL holds the value of the "avatar_url" field.
-	AvatarURL *string `json:"avatar_url,omitempty"`
+	AvatarURL *string `json:"avatarUrl,omitempty"`
 	// Role holds the value of the "role" field.
 	Role user.Role `json:"role,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
+	CreatedAt time.Time `json:"createdAt,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updatedAt,omitempty"`
 }

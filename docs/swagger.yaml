@@ -26,6 +26,18 @@ definitions:
     - name
     - password
     type: object
+  workspace.CreateWorkspaceDto:
+    properties:
+      name:
+        maxLength: 195
+        minLength: 3
+        type: string
+      slug:
+        minLength: 3
+        type: string
+    required:
+    - name
+    type: object
 info:
   contact: {}
   description: This is a jira clone api docs.
@@ -79,6 +91,23 @@ paths:
     get:
       consumes:
       - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - '[Workspace] {v1}'
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/workspace.CreateWorkspaceDto'
       produces:
       - application/json
       responses: {}

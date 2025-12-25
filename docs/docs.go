@@ -101,6 +101,34 @@ const docTemplate = `{
                     "[Workspace] {v1}"
                 ],
                 "responses": {}
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "[Workspace] {v1}"
+                ],
+                "parameters": [
+                    {
+                        "description": "request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/workspace.CreateWorkspaceDto"
+                        }
+                    }
+                ],
+                "responses": {}
             }
         }
     },
@@ -139,6 +167,23 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 8
+                }
+            }
+        },
+        "workspace.CreateWorkspaceDto": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 195,
+                    "minLength": 3
+                },
+                "slug": {
+                    "type": "string",
+                    "minLength": 3
                 }
             }
         }

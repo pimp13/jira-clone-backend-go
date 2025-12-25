@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -23,26 +24,30 @@ func NewWorkspaceController(workspaceService WorkspaceService, authMiddleware au
 
 func (ctrl *WorkspaceController) Routes(r *echo.Group) {
 	router := r.Group("/workspace", ctrl.authMiddleware.SetAuthMiddleware)
-	router.GET("/", ctrl.index)
-	router.POST("/", ctrl.create)
+	router.GET("", ctrl.index)
+	router.POST("", ctrl.create)
 }
 
-// @Tags			[Workspace] {v1}
+// @Tags		[Workspace] {v1}
 // @Accept		json
-// @Produce		json
+// @Produce	json
 // @Router		/v1/workspace [GET]
 // @Security	ApiKeyAuth
 func (ctrl *WorkspaceController) index(c echo.Context) error {
-	return c.JSON(200, map[string]interface{}{
-		"message": "Hello World",
-		"ok":      true,
-	})
+	user, err := util.GetCurrentUser(c)
+	if err != nil {
+		return res.JSON(c, res.ErrorMessage[struct{}]("you unauth", http.StatusUnauthorized))
+	}
+
+	resp := ctrl.workspaceService.Index(c.Request().Context(), user.ID)
+
+	return c.JSON(resp.StatusCode, resp)
 }
 
-// @Tags			[Workspace] {v1}
+// @Tags		[Workspace] {v1}
 // @Accept		json
-// @Produce		json
-// @Param			request	body	CreateWorkspaceDto	true	"request body"
+// @Produce	json
+// @Param		request	body	CreateWorkspaceDto	true	"request body"
 // @Router		/v1/workspace [POST]
 // @Security	ApiKeyAuth
 func (ctrl *WorkspaceController) create(c echo.Context) error {
@@ -52,9 +57,14 @@ func (ctrl *WorkspaceController) create(c echo.Context) error {
 	}
 
 	var bodyData CreateWorkspaceDto
-	if err := c.Bind(&bodyData); err != nil {
-		return res.JSON(c, res.ErrorResponse[struct{}]("bad request body", err))
+	validationErrs, err := res.ValidateRequest(c, &bodyData)
+	if err != nil {
+		return res.JSON(c, res.ErrorResponse[struct{}]("failed to parse body data", err))
 	}
+	if validationErrs != nil {
+		return c.JSON(http.StatusBadRequest, validationErrs)
+	}
+	log.Println("BODY DATA =>", bodyData)
 
 	file, err := c.FormFile("image")
 	if err != nil {
