@@ -38,7 +38,10 @@ func NewFileUploadService(uploadDir string, baseURL ...string) FileUploadService
 	}
 }
 
-func (s *fileUploadService) UploadImage(ctx context.Context, image *multipart.FileHeader) (*FileUploadResultDto, error) {
+func (s *fileUploadService) UploadImage(
+	ctx context.Context,
+	image *multipart.FileHeader,
+) (*FileUploadResultDto, error) {
 	src, err := image.Open()
 	if err != nil {
 		return nil, err
