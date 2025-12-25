@@ -182,8 +182,7 @@ const docTemplate = `{
                     "minLength": 3
                 },
                 "slug": {
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 }
             }
         }

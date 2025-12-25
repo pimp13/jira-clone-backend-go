@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	_ "github.com/pimp13/jira-clone-backend-go/docs"
 	"github.com/pimp13/jira-clone-backend-go/internal/infrastructure/app"
@@ -12,8 +13,17 @@ import (
 // @version		1.0
 // @BasePath		/api
 func main() {
-	application := app.NewApp()
+	application, err := app.NewApp()
+	if err != nil {
+		log.Fatalf("failed to create app: %v", err)
+	}
+
 	if err := application.Bootstrap(); err != nil {
-		log.Fatalf("error in init application: %v", err)
+		log.Fatalf("bootstrap failed: %v", err)
+	}
+
+	if err := application.Start(); err != nil {
+		log.Printf("server shutdown with error: %v", err)
+		os.Exit(1)
 	}
 }

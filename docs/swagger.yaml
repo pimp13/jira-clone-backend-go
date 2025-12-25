@@ -33,7 +33,6 @@ definitions:
         minLength: 3
         type: string
       slug:
-        minLength: 3
         type: string
     required:
     - name
