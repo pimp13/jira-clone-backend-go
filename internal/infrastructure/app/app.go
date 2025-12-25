@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,25 +19,40 @@ import (
 	"github.com/pimp13/jira-clone-backend-go/internal/module/auth"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/jwt"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/workspace"
+	"github.com/pimp13/jira-clone-backend-go/pkg/logger"
 )
 
 type App struct {
 	// Application running port
 	port uint
+
 	// Application api route prefix
 	prefix string
+
 	// Default api version
 	version string
+
+	// Logger use by zerolog
+	logger logger.Logger
+
 	// Engine for running routes
 	engine *echo.Echo
+
 	// Database orm for connect to database
 	entClient *ent.Client
+
 	// Configuration and ENV global variables
 	cfg *config.Config
 }
 
 func NewApp() (*App, error) {
 	cfg := config.NewConfig()
+	isProduction := cfg.App.Env == "production"
+
+	logger := logger.New(isProduction)
+	logger.Info().
+		Bool("isProduction", isProduction).
+		Msg("Hello world this is my logger")
 
 	entClient, err := db.NewEntClient(cfg.DB)
 	if err != nil {
@@ -51,6 +65,7 @@ func NewApp() (*App, error) {
 		port:      cfg.App.Port,
 		prefix:    "/api",
 		version:   "v1",
+		logger:    logger,
 		engine:    e,
 		entClient: entClient,
 		cfg:       cfg,
@@ -77,24 +92,24 @@ func (a *App) Start() error {
 	}
 
 	go func() {
-		log.Printf("🚀 Server starting on %s", addr)
+		a.logger.Info().Str("address", addr).Msg("🚀 Server starting on")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server failed: %v", err)
+			a.logger.Fatal().Err(err).Msg("server failed!")
 		}
 	}()
 
 	<-quit
-	log.Println("🛑 Shutdown signal received...")
+	a.logger.Warn().Msg("🛑 Shutdown signal received...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Printf("graceful shutdown error: %v", err)
+		a.logger.Error().Err(err).Msg("graceful shutdown error!")
 		return err
 	}
 
-	log.Println("✅ Server gracefully stopped")
+	a.logger.Info().Msg("✅ Server gracefully stopped")
 	return nil
 }
 
