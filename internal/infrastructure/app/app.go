@@ -160,7 +160,7 @@ func (a *App) setupServices() {
 	jwtSvc := jwt.NewJWTService(a.entClient, a.cfg)
 	authMiddleware := auth.NewAuthMiddleware(jwtSvc)
 
-	authSvc := auth.NewAuthService(a.entClient, jwtSvc)
+	authSvc := auth.NewAuthService(a.entClient, jwtSvc, a.logger)
 	authCtrl := auth.NewAuthController(authSvc, authMiddleware)
 	authCtrl.Routes(api)
 

@@ -7,6 +7,7 @@ import (
 	"github.com/pimp13/jira-clone-backend-go/ent"
 	"github.com/pimp13/jira-clone-backend-go/ent/user"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/jwt"
+	"github.com/pimp13/jira-clone-backend-go/pkg/logger"
 	"github.com/pimp13/jira-clone-backend-go/pkg/res"
 	"github.com/pimp13/jira-clone-backend-go/pkg/util"
 )
@@ -20,12 +21,14 @@ type AuthService interface {
 type authService struct {
 	client     *ent.Client
 	jwtService jwt.JWTService
+	logger     logger.Logger
 }
 
-func NewAuthService(client *ent.Client, jwtService jwt.JWTService) AuthService {
+func NewAuthService(client *ent.Client, jwtService jwt.JWTService, logger logger.Logger) AuthService {
 	return &authService{
 		client:     client,
 		jwtService: jwtService,
+		logger:     logger,
 	}
 }
 
@@ -54,6 +57,8 @@ func (as *authService) Register(
 		return res.ErrorMessage[struct{}]("error in register user")
 	}
 
+	as.logger.Info().Str("email", bodyData.Email).Msg("A new user registered!")
+
 	return res.SuccessMessage("register user is successfully!")
 }
 
@@ -74,6 +79,8 @@ func (as *authService) Login(
 	if err != nil {
 		return res.ErrorMessage[LoginResponse]("failed to generate auth token")
 	}
+
+	as.logger.Info().Msgf("User by email %s is login...", bodyData.Email)
 
 	return res.SuccessResponse(LoginResponse{
 		User:         user,
