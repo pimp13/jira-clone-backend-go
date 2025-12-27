@@ -59,6 +59,20 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/v1/auth/logout": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "[Auth] {v1}"
+                ],
+                "responses": {}
+            }
+        },
         "/v1/auth/register": {
             "post": {
                 "consumes": [

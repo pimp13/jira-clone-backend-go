@@ -25,6 +25,7 @@ func (ac *AuthController) Routes(r *echo.Group) {
 	r.POST("/auth/register", ac.handleRegister)
 	r.POST("/auth/login", ac.handleLogin)
 	r.GET("/auth/info", ac.handleUserInfo, ac.authMiddleware.SetAuthMiddleware)
+	r.POST("/auth/logout", ac.handleLogout)
 }
 
 // @Tags		[Auth] {v1}
@@ -80,6 +81,25 @@ func (ac *AuthController) handleLogin(c echo.Context) error {
 	})
 
 	return c.JSON(resp.StatusCode, resp)
+}
+
+// @Tags		[Auth] {v1}
+// @Accept		json
+// @Produce	json
+// @Router		/v1/auth/logout [POST]
+func (ac *AuthController) handleLogout(c echo.Context) error {
+	c.SetCookie(&http.Cookie{
+		Name:     config.Envs.App.AuthCookieName,
+		Value:    "",
+		Path:     "/",
+		Domain:   config.Envs.App.Url,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	})
+
+	return res.JSON(c, res.SuccessMessage("you are logouted!"))
 }
 
 // @Tags		[Auth] {v1}
