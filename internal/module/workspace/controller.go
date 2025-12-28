@@ -29,6 +29,7 @@ func (ctrl *WorkspaceController) Routes(r *echo.Group) {
 	router := r.Group("/workspace", ctrl.authMiddleware.SetAuthMiddleware)
 	router.GET("", ctrl.index)
 	router.POST("", ctrl.create)
+	router.POST("/:id", ctrl.showById)
 }
 
 // @Tags		[Workspace] {v1}
@@ -43,6 +44,23 @@ func (ctrl *WorkspaceController) index(c echo.Context) error {
 	}
 
 	resp := ctrl.workspaceService.Index(c.Request().Context(), user.ID)
+
+	return c.JSON(resp.StatusCode, resp)
+}
+
+// @Tags		[Workspace] {v1}
+// @Accept		json
+// @Produce	json
+// @Router		/v1/workspace/{id} [GET]
+// @Param		id	path	int	true	"workspace id"
+// @Security	ApiKeyAuth
+func (ctrl *WorkspaceController) showById(c echo.Context) error {
+	user, err := util.GetCurrentUser(c)
+	if err != nil {
+		return res.JSON(c, res.ErrorMessage[struct{}]("you unauth", http.StatusUnauthorized))
+	}
+
+	resp := ctrl.workspaceService.ShowById(c.Request().Context(), user.ID)
 
 	return c.JSON(resp.StatusCode, resp)
 }

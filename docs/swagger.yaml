@@ -123,4 +123,21 @@ paths:
       - ApiKeyAuth: []
       tags:
       - '[Workspace] {v1}'
+  /v1/workspace/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: workspace id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - '[Workspace] {v1}'
 swagger: "2.0"

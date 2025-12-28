@@ -16,7 +16,15 @@ import (
 )
 
 type WorkspaceService interface {
-	Index(ctx context.Context, userId uuid.UUID) *res.Response[[]*WorkspaceResponse]
+	Index(
+		ctx context.Context,
+		userId uuid.UUID,
+	) *res.Response[[]*WorkspaceResponse]
+
+	ShowById(
+		ctx context.Context,
+		userId uuid.UUID,
+	) *res.Response[*WorkspaceResponse]
 
 	Create(
 		ctx context.Context,
@@ -38,8 +46,11 @@ func NewWorkspaceService(client *ent.Client) WorkspaceService {
 	}
 }
 
-func (s *workspaceService) Index(ctx context.Context, userId uuid.UUID) *res.Response[[]*WorkspaceResponse] {
-	data, err := s.client.Workspace.Query().
+func (s *workspaceService) Index(
+	ctx context.Context,
+	userId uuid.UUID,
+) *res.Response[[]*WorkspaceResponse] {
+	initData, err := s.client.Workspace.Query().
 		Where(entWorkspace.OwnerIDEQ(userId)).
 		WithOwner().
 		Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
@@ -52,11 +63,32 @@ func (s *workspaceService) Index(ctx context.Context, userId uuid.UUID) *res.Res
 		return res.ErrorMessage[[]*WorkspaceResponse]("failed to get workspace")
 	}
 
-	finalData := make([]*WorkspaceResponse, 0, len(data))
-	for _, ws := range data {
+	finalData := make([]*WorkspaceResponse, 0, len(initData))
+	for _, ws := range initData {
 		finalData = append(finalData, ToWorkspaceResponse(ws))
 	}
 
+	return res.SuccessResponse(finalData, "")
+}
+
+func (s *workspaceService) ShowById(
+	ctx context.Context,
+	userId uuid.UUID,
+) *res.Response[*WorkspaceResponse] {
+	initData, err := s.client.Workspace.Query().
+		Where(entWorkspace.OwnerIDEQ(userId)).
+		WithOwner().
+		Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return res.ErrorMessage[*WorkspaceResponse]("workspace is not found", http.StatusBadRequest)
+		}
+		return res.ErrorMessage[*WorkspaceResponse]("failed to get workspace")
+	}
+
+	finalData := ToWorkspaceResponse(initData)
 	return res.SuccessResponse(finalData, "")
 }
 

@@ -137,6 +137,34 @@
                 ],
                 "responses": {}
             }
+        },
+        "/v1/workspace/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "[Workspace] {v1}"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "workspace id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
         }
     },
     "definitions": {
