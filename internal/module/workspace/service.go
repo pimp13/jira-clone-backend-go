@@ -95,6 +95,7 @@ func (s *workspaceService) Create(
 		SetName(bodyData.Name).
 		SetSlug(slug).
 		SetOwnerID(userId).
+		SetInviteCode(util.GenerateInviteCode(0)).
 		SetNillableImageURL(imageURL)
 
 	if _, err := builder.Save(ctx); err != nil {
