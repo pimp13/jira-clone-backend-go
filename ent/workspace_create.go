@@ -48,6 +48,12 @@ func (_c *WorkspaceCreate) SetNillableImageURL(v *string) *WorkspaceCreate {
 	return _c
 }
 
+// SetInviteCode sets the "invite_code" field.
+func (_c *WorkspaceCreate) SetInviteCode(v string) *WorkspaceCreate {
+	_c.mutation.SetInviteCode(v)
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *WorkspaceCreate) SetCreatedAt(v time.Time) *WorkspaceCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -168,6 +174,14 @@ func (_c *WorkspaceCreate) check() error {
 			return &ValidationError{Name: "slug", err: fmt.Errorf(`ent: validator failed for field "Workspace.slug": %w`, err)}
 		}
 	}
+	if _, ok := _c.mutation.InviteCode(); !ok {
+		return &ValidationError{Name: "invite_code", err: errors.New(`ent: missing required field "Workspace.invite_code"`)}
+	}
+	if v, ok := _c.mutation.InviteCode(); ok {
+		if err := workspace.InviteCodeValidator(v); err != nil {
+			return &ValidationError{Name: "invite_code", err: fmt.Errorf(`ent: validator failed for field "Workspace.invite_code": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Workspace.created_at"`)}
 	}
@@ -226,6 +240,10 @@ func (_c *WorkspaceCreate) createSpec() (*Workspace, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ImageURL(); ok {
 		_spec.SetField(workspace.FieldImageURL, field.TypeString, value)
 		_node.ImageURL = &value
+	}
+	if value, ok := _c.mutation.InviteCode(); ok {
+		_spec.SetField(workspace.FieldInviteCode, field.TypeString, value)
+		_node.InviteCode = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(workspace.FieldCreatedAt, field.TypeTime, value)

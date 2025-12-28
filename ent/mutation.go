@@ -883,6 +883,7 @@ type WorkspaceMutation struct {
 	name          *string
 	slug          *string
 	image_url     *string
+	invite_code   *string
 	created_at    *time.Time
 	updated_at    *time.Time
 	clearedFields map[string]struct{}
@@ -1118,6 +1119,42 @@ func (m *WorkspaceMutation) ResetImageURL() {
 	delete(m.clearedFields, workspace.FieldImageURL)
 }
 
+// SetInviteCode sets the "invite_code" field.
+func (m *WorkspaceMutation) SetInviteCode(s string) {
+	m.invite_code = &s
+}
+
+// InviteCode returns the value of the "invite_code" field in the mutation.
+func (m *WorkspaceMutation) InviteCode() (r string, exists bool) {
+	v := m.invite_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInviteCode returns the old "invite_code" field's value of the Workspace entity.
+// If the Workspace object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkspaceMutation) OldInviteCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInviteCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInviteCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInviteCode: %w", err)
+	}
+	return oldValue.InviteCode, nil
+}
+
+// ResetInviteCode resets all changes to the "invite_code" field.
+func (m *WorkspaceMutation) ResetInviteCode() {
+	m.invite_code = nil
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *WorkspaceMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -1287,7 +1324,7 @@ func (m *WorkspaceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkspaceMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
 	if m.name != nil {
 		fields = append(fields, workspace.FieldName)
 	}
@@ -1296,6 +1333,9 @@ func (m *WorkspaceMutation) Fields() []string {
 	}
 	if m.image_url != nil {
 		fields = append(fields, workspace.FieldImageURL)
+	}
+	if m.invite_code != nil {
+		fields = append(fields, workspace.FieldInviteCode)
 	}
 	if m.created_at != nil {
 		fields = append(fields, workspace.FieldCreatedAt)
@@ -1320,6 +1360,8 @@ func (m *WorkspaceMutation) Field(name string) (ent.Value, bool) {
 		return m.Slug()
 	case workspace.FieldImageURL:
 		return m.ImageURL()
+	case workspace.FieldInviteCode:
+		return m.InviteCode()
 	case workspace.FieldCreatedAt:
 		return m.CreatedAt()
 	case workspace.FieldUpdatedAt:
@@ -1341,6 +1383,8 @@ func (m *WorkspaceMutation) OldField(ctx context.Context, name string) (ent.Valu
 		return m.OldSlug(ctx)
 	case workspace.FieldImageURL:
 		return m.OldImageURL(ctx)
+	case workspace.FieldInviteCode:
+		return m.OldInviteCode(ctx)
 	case workspace.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case workspace.FieldUpdatedAt:
@@ -1376,6 +1420,13 @@ func (m *WorkspaceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetImageURL(v)
+		return nil
+	case workspace.FieldInviteCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInviteCode(v)
 		return nil
 	case workspace.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -1464,6 +1515,9 @@ func (m *WorkspaceMutation) ResetField(name string) error {
 		return nil
 	case workspace.FieldImageURL:
 		m.ResetImageURL()
+		return nil
+	case workspace.FieldInviteCode:
+		m.ResetInviteCode()
 		return nil
 	case workspace.FieldCreatedAt:
 		m.ResetCreatedAt()

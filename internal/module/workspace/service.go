@@ -78,18 +78,29 @@ func (s *workspaceService) Create(
 		return res.ErrorMessage[struct{}]("failed to generate slug")
 	}
 
-	uploadResult, err := s.fileUploadService.UploadImage(ctx, file)
-	if err != nil {
-		return res.ErrorResponse[struct{}]("failed to upload file", err)
+	// TODO: imageURL or nil or default placeholder image
+	var imageURL *string = nil
+	var filePath *string = nil
+
+	if file != nil {
+		uploadResult, err := s.fileUploadService.UploadImage(ctx, file)
+		if err != nil {
+			return res.ErrorResponse[struct{}]("failed to upload file", err)
+		}
+		imageURL = &uploadResult.URL
+		filePath = &uploadResult.FilePath
 	}
 
-	if _, err := s.client.Workspace.Create().
+	builder := s.client.Workspace.Create().
 		SetName(bodyData.Name).
-		SetImageURL(uploadResult.URL).
 		SetSlug(slug).
 		SetOwnerID(userId).
-		Save(ctx); err != nil {
-		_ = s.fileUploadService.DeleteImage(ctx, uploadResult.FilePath)
+		SetNillableImageURL(imageURL)
+
+	if _, err := builder.Save(ctx); err != nil {
+		if file != nil && filePath != nil {
+			_ = s.fileUploadService.DeleteImage(ctx, *filePath)
+		}
 		return res.ErrorResponse[struct{}]("failed to save workspace", err)
 	}
 

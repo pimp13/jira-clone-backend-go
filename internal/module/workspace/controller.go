@@ -1,10 +1,13 @@
 package workspace
 
 import (
+	"errors"
 	"log"
+	"mime/multipart"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+
 	"github.com/pimp13/jira-clone-backend-go/internal/module/auth"
 	"github.com/pimp13/jira-clone-backend-go/pkg/res"
 	"github.com/pimp13/jira-clone-backend-go/pkg/util"
@@ -67,11 +70,14 @@ func (ctrl *WorkspaceController) create(c echo.Context) error {
 	log.Println("BODY DATA =>", bodyData)
 
 	file, err := c.FormFile("image")
-	if err != nil {
+	var uploadedFile *multipart.FileHeader = nil
+	if err == nil {
+		uploadedFile = file
+	} else if !errors.Is(err, http.ErrMissingFile) {
 		return res.JSON(c, res.ErrorResponse[struct{}]("file is bad way", err))
 	}
 
-	resp := ctrl.workspaceService.Create(c.Request().Context(), bodyData, file, user.ID)
+	resp := ctrl.workspaceService.Create(c.Request().Context(), bodyData, uploadedFile, user.ID)
 
 	return c.JSON(resp.StatusCode, resp)
 }

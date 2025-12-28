@@ -50,9 +50,6 @@ func NewApp() (*App, error) {
 	isProduction := cfg.App.Env == "production"
 
 	logger := logger.New(isProduction)
-	logger.Info().
-		Bool("isProduction", isProduction).
-		Msg("Hello world this is my logger")
 
 	entClient, err := db.NewEntClient(cfg.DB)
 	if err != nil {
@@ -60,6 +57,10 @@ func NewApp() (*App, error) {
 	}
 
 	e := echo.New()
+
+	logger.Info().
+		Bool("IsProductionMode", isProduction).
+		Msg("Application initialized!")
 
 	return &App{
 		port:      cfg.App.Port,
@@ -139,7 +140,9 @@ func (a *App) setupMiddlewares() {
 		MaxAge:           300,
 	}))
 
-	a.engine.Use(middleware.Logger())
+	if a.cfg.App.Env == "development" {
+		a.engine.Use(middleware.Logger())
+	}
 	a.engine.Use(middleware.Recover())
 
 	a.engine.Static("/public", "public")

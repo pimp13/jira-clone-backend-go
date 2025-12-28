@@ -71,6 +71,11 @@ func ImageURL(v string) predicate.Workspace {
 	return predicate.Workspace(sql.FieldEQ(FieldImageURL, v))
 }
 
+// InviteCode applies equality check predicate on the "invite_code" field. It's identical to InviteCodeEQ.
+func InviteCode(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldEQ(FieldInviteCode, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Workspace {
 	return predicate.Workspace(sql.FieldEQ(FieldCreatedAt, v))
@@ -289,6 +294,71 @@ func ImageURLEqualFold(v string) predicate.Workspace {
 // ImageURLContainsFold applies the ContainsFold predicate on the "image_url" field.
 func ImageURLContainsFold(v string) predicate.Workspace {
 	return predicate.Workspace(sql.FieldContainsFold(FieldImageURL, v))
+}
+
+// InviteCodeEQ applies the EQ predicate on the "invite_code" field.
+func InviteCodeEQ(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldEQ(FieldInviteCode, v))
+}
+
+// InviteCodeNEQ applies the NEQ predicate on the "invite_code" field.
+func InviteCodeNEQ(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldNEQ(FieldInviteCode, v))
+}
+
+// InviteCodeIn applies the In predicate on the "invite_code" field.
+func InviteCodeIn(vs ...string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldIn(FieldInviteCode, vs...))
+}
+
+// InviteCodeNotIn applies the NotIn predicate on the "invite_code" field.
+func InviteCodeNotIn(vs ...string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldNotIn(FieldInviteCode, vs...))
+}
+
+// InviteCodeGT applies the GT predicate on the "invite_code" field.
+func InviteCodeGT(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldGT(FieldInviteCode, v))
+}
+
+// InviteCodeGTE applies the GTE predicate on the "invite_code" field.
+func InviteCodeGTE(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldGTE(FieldInviteCode, v))
+}
+
+// InviteCodeLT applies the LT predicate on the "invite_code" field.
+func InviteCodeLT(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldLT(FieldInviteCode, v))
+}
+
+// InviteCodeLTE applies the LTE predicate on the "invite_code" field.
+func InviteCodeLTE(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldLTE(FieldInviteCode, v))
+}
+
+// InviteCodeContains applies the Contains predicate on the "invite_code" field.
+func InviteCodeContains(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldContains(FieldInviteCode, v))
+}
+
+// InviteCodeHasPrefix applies the HasPrefix predicate on the "invite_code" field.
+func InviteCodeHasPrefix(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldHasPrefix(FieldInviteCode, v))
+}
+
+// InviteCodeHasSuffix applies the HasSuffix predicate on the "invite_code" field.
+func InviteCodeHasSuffix(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldHasSuffix(FieldInviteCode, v))
+}
+
+// InviteCodeEqualFold applies the EqualFold predicate on the "invite_code" field.
+func InviteCodeEqualFold(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldEqualFold(FieldInviteCode, v))
+}
+
+// InviteCodeContainsFold applies the ContainsFold predicate on the "invite_code" field.
+func InviteCodeContainsFold(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldContainsFold(FieldInviteCode, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

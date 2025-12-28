@@ -61,7 +61,5 @@ me:
 	@echo "                  |___/       ";
 
 
-
-
 migrate:
 	@go run entgo.io/ent/cmd/ent generate ./ent/schema

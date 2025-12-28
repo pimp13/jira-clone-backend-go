@@ -22,6 +22,7 @@ func (Workspace) Fields() []ent.Field {
 		field.String("name").NotEmpty().MinLen(3).MaxLen(195),
 		field.String("slug").Unique().NotEmpty().MinLen(3).MaxLen(195),
 		field.String("image_url").Optional().Nillable(),
+		field.String("invite_code").Immutable().NotEmpty().MaxLen(64).MinLen(64).Unique(),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 

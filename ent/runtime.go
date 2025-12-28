@@ -102,12 +102,31 @@ func init() {
 			return nil
 		}
 	}()
+	// workspaceDescInviteCode is the schema descriptor for invite_code field.
+	workspaceDescInviteCode := workspaceFields[4].Descriptor()
+	// workspace.InviteCodeValidator is a validator for the "invite_code" field. It is called by the builders before save.
+	workspace.InviteCodeValidator = func() func(string) error {
+		validators := workspaceDescInviteCode.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(invite_code string) error {
+			for _, fn := range fns {
+				if err := fn(invite_code); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// workspaceDescCreatedAt is the schema descriptor for created_at field.
-	workspaceDescCreatedAt := workspaceFields[4].Descriptor()
+	workspaceDescCreatedAt := workspaceFields[5].Descriptor()
 	// workspace.DefaultCreatedAt holds the default value on creation for the created_at field.
 	workspace.DefaultCreatedAt = workspaceDescCreatedAt.Default.(func() time.Time)
 	// workspaceDescUpdatedAt is the schema descriptor for updated_at field.
-	workspaceDescUpdatedAt := workspaceFields[5].Descriptor()
+	workspaceDescUpdatedAt := workspaceFields[6].Descriptor()
 	// workspace.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	workspace.DefaultUpdatedAt = workspaceDescUpdatedAt.Default.(func() time.Time)
 	// workspace.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

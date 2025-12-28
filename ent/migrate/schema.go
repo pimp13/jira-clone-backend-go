@@ -44,6 +44,7 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 195},
 		{Name: "slug", Type: field.TypeString, Unique: true, Size: 195},
 		{Name: "image_url", Type: field.TypeString, Nullable: true},
+		{Name: "invite_code", Type: field.TypeString, Unique: true, Size: 64},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "owner_id", Type: field.TypeUUID},
@@ -56,7 +57,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "workspaces_users_workspaces",
-				Columns:    []*schema.Column{WorkspacesColumns[6]},
+				Columns:    []*schema.Column{WorkspacesColumns[7]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -70,7 +71,7 @@ var (
 			{
 				Name:    "workspace_owner_id",
 				Unique:  false,
-				Columns: []*schema.Column{WorkspacesColumns[6]},
+				Columns: []*schema.Column{WorkspacesColumns[7]},
 			},
 		},
 	}

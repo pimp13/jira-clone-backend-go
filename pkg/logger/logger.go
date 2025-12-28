@@ -28,7 +28,7 @@ func New(isProduction bool) Logger {
 		With().
 		Timestamp().
 		Caller().
-		Str("loc", "your-app").
+		// Str("loc", "your-app").
 		Logger()
 
 	return &logger
