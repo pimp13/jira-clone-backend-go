@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
 	"github.com/pimp13/jira-clone-backend-go/internal/module/auth"
@@ -52,15 +53,20 @@ func (ctrl *WorkspaceController) index(c echo.Context) error {
 // @Accept		json
 // @Produce	json
 // @Router		/v1/workspace/{id} [GET]
-// @Param		id	path	int	true	"workspace id"
+// @Param		id	path	string	true	"workspace id"
 // @Security	ApiKeyAuth
 func (ctrl *WorkspaceController) showById(c echo.Context) error {
+	workspaceId, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return res.JSON(c, res.ErrorMessage[struct{}]("bad request param", http.StatusUnauthorized))
+	}
+
 	user, err := util.GetCurrentUser(c)
 	if err != nil {
 		return res.JSON(c, res.ErrorMessage[struct{}]("you unauth", http.StatusUnauthorized))
 	}
 
-	resp := ctrl.workspaceService.ShowById(c.Request().Context(), user.ID)
+	resp := ctrl.workspaceService.ShowById(c.Request().Context(), workspaceId, user.ID)
 
 	return c.JSON(resp.StatusCode, resp)
 }

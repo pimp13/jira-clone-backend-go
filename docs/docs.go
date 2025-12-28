@@ -163,7 +163,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "workspace id",
                         "name": "id",
                         "in": "path",

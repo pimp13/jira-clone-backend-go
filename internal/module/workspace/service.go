@@ -23,6 +23,7 @@ type WorkspaceService interface {
 
 	ShowById(
 		ctx context.Context,
+		workspaceId uuid.UUID,
 		userId uuid.UUID,
 	) *res.Response[*WorkspaceResponse]
 
@@ -73,10 +74,11 @@ func (s *workspaceService) Index(
 
 func (s *workspaceService) ShowById(
 	ctx context.Context,
+	workspaceId uuid.UUID,
 	userId uuid.UUID,
 ) *res.Response[*WorkspaceResponse] {
 	initData, err := s.client.Workspace.Query().
-		Where(entWorkspace.OwnerIDEQ(userId)).
+		Where(entWorkspace.IDEQ(workspaceId)).
 		WithOwner().
 		Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
 		Only(ctx)
