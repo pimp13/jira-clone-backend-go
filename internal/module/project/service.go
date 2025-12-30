@@ -1,15 +1,33 @@
 package project
 
-import "context"
+import (
+	"context"
+
+	"github.com/pimp13/jira-clone-backend-go/ent"
+	dto "github.com/pimp13/jira-clone-backend-go/internal/module/project/dto"
+	"github.com/pimp13/jira-clone-backend-go/pkg/logger"
+)
 
 type ProjectService interface {
 	Index(ctx context.Context)
 }
 
-type ProjectServiceImpl struct {}
-
-func NewProjectService() ProjectService {
-	return &ProjectServiceImpl{}
+type projectService struct {
+	client *ent.Client
+	logger logger.Logger
 }
 
-func (s *ProjectServiceImpl) Index(ctx context.Context) {}
+func NewProjectService(client *ent.Client, logger logger.Logger) ProjectService {
+	return &projectService{
+		client,
+		logger,
+	}
+}
+
+func (s *projectService) Index(ctx context.Context) {}
+
+func (s *projectService) Create(
+	ctx context.Context,
+	bodyData dto.CreateProjectDto,
+) {
+}

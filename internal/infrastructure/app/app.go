@@ -18,6 +18,7 @@ import (
 	"github.com/pimp13/jira-clone-backend-go/internal/infrastructure/db"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/auth"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/jwt"
+	"github.com/pimp13/jira-clone-backend-go/internal/module/project"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/workspace"
 	"github.com/pimp13/jira-clone-backend-go/pkg/logger"
 )
@@ -157,18 +158,24 @@ func (a *App) setupRoutes() {
 }
 
 func (a *App) setupServices() {
-	api := a.engine.Group(fmt.Sprintf("%s/%s", a.prefix, a.version))
+	// V1 Routes
+	api_v1 := a.engine.Group(fmt.Sprintf("%s/%s", a.prefix, a.version))
 
 	// JWT & Auth
 	jwtSvc := jwt.NewJWTService(a.entClient, a.cfg)
 	authMiddleware := auth.NewAuthMiddleware(jwtSvc)
-
 	authSvc := auth.NewAuthService(a.entClient, jwtSvc, a.logger)
 	authCtrl := auth.NewAuthController(authSvc, authMiddleware)
-	authCtrl.Routes(api)
+	authCtrl.Routes(api_v1)
 
 	// Workspace
 	wsSvc := workspace.NewWorkspaceService(a.entClient)
 	wsCtrl := workspace.NewWorkspaceController(wsSvc, authMiddleware)
-	wsCtrl.Routes(api)
+	wsCtrl.Routes(api_v1)
+
+	// Project
+	projectService := project.NewProjectService(a.entClient, a.logger)
+	projectController := project.NewProjectController(projectService, authMiddleware)
+	projectController.Routes(api_v1)
+
 }

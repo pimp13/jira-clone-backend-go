@@ -98,6 +98,25 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/v1/project": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "[Project] {v1}"
+                ],
+                "responses": {}
+            }
+        },
         "/v1/workspace": {
             "get": {
                 "security": [

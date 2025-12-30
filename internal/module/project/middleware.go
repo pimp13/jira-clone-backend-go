@@ -1,6 +1,6 @@
 package project
 
-type ProjectMiddleware struct {}
+type ProjectMiddleware struct{}
 
 func NewProjectMiddleware() *ProjectMiddleware {
 	return &ProjectMiddleware{}

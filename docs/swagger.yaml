@@ -95,6 +95,17 @@ paths:
       responses: {}
       tags:
       - '[Auth] {v1}'
+  /v1/project:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - '[Project] {v1}'
   /v1/workspace:
     get:
       consumes:
