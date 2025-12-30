@@ -19,6 +19,7 @@ type Workspace struct {
 func (Workspace) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.New()).Default(uuid.New).Immutable(),
+
 		field.String("name").NotEmpty().MinLen(3).MaxLen(195),
 		field.String("slug").Unique().NotEmpty().MinLen(3).MaxLen(195),
 		field.String("image_url").Optional().Nillable(),
@@ -26,7 +27,7 @@ func (Workspace) Fields() []ent.Field {
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 
-		// forign key
+		// forign keys
 		field.UUID("owner_id", uuid.UUID{}),
 	}
 }
@@ -39,9 +40,12 @@ func (Workspace) Edges() []ent.Edge {
 			Unique().
 			Required().
 			Field("owner_id"),
+
+		edge.To("projects", Project.Type),
 	}
 }
 
+// Indexs of the Workspace.
 func (Workspace) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("slug").Unique(),

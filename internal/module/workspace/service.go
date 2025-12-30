@@ -11,6 +11,7 @@ import (
 	"github.com/pimp13/jira-clone-backend-go/ent"
 	entWorkspace "github.com/pimp13/jira-clone-backend-go/ent/workspace"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/fileupload"
+	workspace "github.com/pimp13/jira-clone-backend-go/internal/module/workspace/dto"
 	"github.com/pimp13/jira-clone-backend-go/pkg/res"
 	"github.com/pimp13/jira-clone-backend-go/pkg/util"
 )
@@ -19,17 +20,17 @@ type WorkspaceService interface {
 	Index(
 		ctx context.Context,
 		userId uuid.UUID,
-	) *res.Response[[]*WorkspaceResponse]
+	) *res.Response[[]*workspace.WorkspaceResponse]
 
 	ShowById(
 		ctx context.Context,
 		workspaceId uuid.UUID,
 		userId uuid.UUID,
-	) *res.Response[*WorkspaceResponse]
+	) *res.Response[*workspace.WorkspaceResponse]
 
 	Create(
 		ctx context.Context,
-		bodyData CreateWorkspaceDto,
+		bodyData workspace.CreateWorkspaceDto,
 		file *multipart.FileHeader,
 		userId uuid.UUID,
 	) *res.Response[struct{}]
@@ -50,7 +51,7 @@ func NewWorkspaceService(client *ent.Client) WorkspaceService {
 func (s *workspaceService) Index(
 	ctx context.Context,
 	userId uuid.UUID,
-) *res.Response[[]*WorkspaceResponse] {
+) *res.Response[[]*workspace.WorkspaceResponse] {
 	initData, err := s.client.Workspace.Query().
 		Where(entWorkspace.OwnerIDEQ(userId)).
 		WithOwner().
@@ -59,12 +60,15 @@ func (s *workspaceService) Index(
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return res.ErrorMessage[[]*WorkspaceResponse]("workspace is not found", http.StatusBadRequest)
+			return res.ErrorMessage[[]*workspace.WorkspaceResponse](
+				"workspace is not found",
+				http.StatusBadRequest,
+			)
 		}
-		return res.ErrorMessage[[]*WorkspaceResponse]("failed to get workspace")
+		return res.ErrorMessage[[]*workspace.WorkspaceResponse]("failed to get workspace")
 	}
 
-	finalData := make([]*WorkspaceResponse, 0, len(initData))
+	finalData := make([]*workspace.WorkspaceResponse, 0, len(initData))
 	for _, ws := range initData {
 		finalData = append(finalData, ToWorkspaceResponse(ws))
 	}
@@ -76,7 +80,7 @@ func (s *workspaceService) ShowById(
 	ctx context.Context,
 	workspaceId uuid.UUID,
 	userId uuid.UUID,
-) *res.Response[*WorkspaceResponse] {
+) *res.Response[*workspace.WorkspaceResponse] {
 	initData, err := s.client.Workspace.Query().
 		Where(entWorkspace.IDEQ(workspaceId)).
 		WithOwner().
@@ -85,9 +89,12 @@ func (s *workspaceService) ShowById(
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return res.ErrorMessage[*WorkspaceResponse]("workspace is not found", http.StatusBadRequest)
+			return res.ErrorMessage[*workspace.WorkspaceResponse](
+				"workspace is not found",
+				http.StatusBadRequest,
+			)
 		}
-		return res.ErrorMessage[*WorkspaceResponse]("failed to get workspace")
+		return res.ErrorMessage[*workspace.WorkspaceResponse]("failed to get workspace")
 	}
 
 	finalData := ToWorkspaceResponse(initData)
@@ -96,7 +103,7 @@ func (s *workspaceService) ShowById(
 
 func (s *workspaceService) Create(
 	ctx context.Context,
-	bodyData CreateWorkspaceDto,
+	bodyData workspace.CreateWorkspaceDto,
 	file *multipart.FileHeader,
 	userId uuid.UUID,
 ) *res.Response[struct{}] {

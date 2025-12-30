@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -15,58 +14,56 @@ import (
 	"github.com/google/uuid"
 	"github.com/pimp13/jira-clone-backend-go/ent/predicate"
 	"github.com/pimp13/jira-clone-backend-go/ent/project"
-	"github.com/pimp13/jira-clone-backend-go/ent/user"
 	"github.com/pimp13/jira-clone-backend-go/ent/workspace"
 )
 
-// WorkspaceQuery is the builder for querying Workspace entities.
-type WorkspaceQuery struct {
+// ProjectQuery is the builder for querying Project entities.
+type ProjectQuery struct {
 	config
-	ctx          *QueryContext
-	order        []workspace.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.Workspace
-	withOwner    *UserQuery
-	withProjects *ProjectQuery
+	ctx           *QueryContext
+	order         []project.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.Project
+	withWorkspace *WorkspaceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the WorkspaceQuery builder.
-func (_q *WorkspaceQuery) Where(ps ...predicate.Workspace) *WorkspaceQuery {
+// Where adds a new predicate for the ProjectQuery builder.
+func (_q *ProjectQuery) Where(ps ...predicate.Project) *ProjectQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *WorkspaceQuery) Limit(limit int) *WorkspaceQuery {
+func (_q *ProjectQuery) Limit(limit int) *ProjectQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *WorkspaceQuery) Offset(offset int) *WorkspaceQuery {
+func (_q *ProjectQuery) Offset(offset int) *ProjectQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *WorkspaceQuery) Unique(unique bool) *WorkspaceQuery {
+func (_q *ProjectQuery) Unique(unique bool) *ProjectQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *WorkspaceQuery) Order(o ...workspace.OrderOption) *WorkspaceQuery {
+func (_q *ProjectQuery) Order(o ...project.OrderOption) *ProjectQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// QueryOwner chains the current query on the "owner" edge.
-func (_q *WorkspaceQuery) QueryOwner() *UserQuery {
-	query := (&UserClient{config: _q.config}).Query()
+// QueryWorkspace chains the current query on the "workspace" edge.
+func (_q *ProjectQuery) QueryWorkspace() *WorkspaceQuery {
+	query := (&WorkspaceClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -76,9 +73,9 @@ func (_q *WorkspaceQuery) QueryOwner() *UserQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(workspace.Table, workspace.FieldID, selector),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, workspace.OwnerTable, workspace.OwnerColumn),
+			sqlgraph.From(project.Table, project.FieldID, selector),
+			sqlgraph.To(workspace.Table, workspace.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, project.WorkspaceTable, project.WorkspaceColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -86,43 +83,21 @@ func (_q *WorkspaceQuery) QueryOwner() *UserQuery {
 	return query
 }
 
-// QueryProjects chains the current query on the "projects" edge.
-func (_q *WorkspaceQuery) QueryProjects() *ProjectQuery {
-	query := (&ProjectClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(workspace.Table, workspace.FieldID, selector),
-			sqlgraph.To(project.Table, project.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, workspace.ProjectsTable, workspace.ProjectsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// First returns the first Workspace entity from the query.
-// Returns a *NotFoundError when no Workspace was found.
-func (_q *WorkspaceQuery) First(ctx context.Context) (*Workspace, error) {
+// First returns the first Project entity from the query.
+// Returns a *NotFoundError when no Project was found.
+func (_q *ProjectQuery) First(ctx context.Context) (*Project, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{workspace.Label}
+		return nil, &NotFoundError{project.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *WorkspaceQuery) FirstX(ctx context.Context) *Workspace {
+func (_q *ProjectQuery) FirstX(ctx context.Context) *Project {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -130,22 +105,22 @@ func (_q *WorkspaceQuery) FirstX(ctx context.Context) *Workspace {
 	return node
 }
 
-// FirstID returns the first Workspace ID from the query.
-// Returns a *NotFoundError when no Workspace ID was found.
-func (_q *WorkspaceQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+// FirstID returns the first Project ID from the query.
+// Returns a *NotFoundError when no Project ID was found.
+func (_q *ProjectQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{workspace.Label}
+		err = &NotFoundError{project.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *WorkspaceQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *ProjectQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -153,10 +128,10 @@ func (_q *WorkspaceQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// Only returns a single Workspace entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one Workspace entity is found.
-// Returns a *NotFoundError when no Workspace entities are found.
-func (_q *WorkspaceQuery) Only(ctx context.Context) (*Workspace, error) {
+// Only returns a single Project entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one Project entity is found.
+// Returns a *NotFoundError when no Project entities are found.
+func (_q *ProjectQuery) Only(ctx context.Context) (*Project, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -165,14 +140,14 @@ func (_q *WorkspaceQuery) Only(ctx context.Context) (*Workspace, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{workspace.Label}
+		return nil, &NotFoundError{project.Label}
 	default:
-		return nil, &NotSingularError{workspace.Label}
+		return nil, &NotSingularError{project.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *WorkspaceQuery) OnlyX(ctx context.Context) *Workspace {
+func (_q *ProjectQuery) OnlyX(ctx context.Context) *Project {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -180,10 +155,10 @@ func (_q *WorkspaceQuery) OnlyX(ctx context.Context) *Workspace {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Workspace ID in the query.
-// Returns a *NotSingularError when more than one Workspace ID is found.
+// OnlyID is like Only, but returns the only Project ID in the query.
+// Returns a *NotSingularError when more than one Project ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *WorkspaceQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *ProjectQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -192,15 +167,15 @@ func (_q *WorkspaceQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) 
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{workspace.Label}
+		err = &NotFoundError{project.Label}
 	default:
-		err = &NotSingularError{workspace.Label}
+		err = &NotSingularError{project.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *WorkspaceQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *ProjectQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -208,18 +183,18 @@ func (_q *WorkspaceQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// All executes the query and returns a list of Workspaces.
-func (_q *WorkspaceQuery) All(ctx context.Context) ([]*Workspace, error) {
+// All executes the query and returns a list of Projects.
+func (_q *ProjectQuery) All(ctx context.Context) ([]*Project, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*Workspace, *WorkspaceQuery]()
-	return withInterceptors[[]*Workspace](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*Project, *ProjectQuery]()
+	return withInterceptors[[]*Project](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *WorkspaceQuery) AllX(ctx context.Context) []*Workspace {
+func (_q *ProjectQuery) AllX(ctx context.Context) []*Project {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -227,20 +202,20 @@ func (_q *WorkspaceQuery) AllX(ctx context.Context) []*Workspace {
 	return nodes
 }
 
-// IDs executes the query and returns a list of Workspace IDs.
-func (_q *WorkspaceQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+// IDs executes the query and returns a list of Project IDs.
+func (_q *ProjectQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(workspace.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(project.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *WorkspaceQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *ProjectQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -249,16 +224,16 @@ func (_q *WorkspaceQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (_q *WorkspaceQuery) Count(ctx context.Context) (int, error) {
+func (_q *ProjectQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*WorkspaceQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ProjectQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *WorkspaceQuery) CountX(ctx context.Context) int {
+func (_q *ProjectQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -267,7 +242,7 @@ func (_q *WorkspaceQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *WorkspaceQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *ProjectQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -280,7 +255,7 @@ func (_q *WorkspaceQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *WorkspaceQuery) ExistX(ctx context.Context) bool {
+func (_q *ProjectQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -288,45 +263,33 @@ func (_q *WorkspaceQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the WorkspaceQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the ProjectQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *WorkspaceQuery) Clone() *WorkspaceQuery {
+func (_q *ProjectQuery) Clone() *ProjectQuery {
 	if _q == nil {
 		return nil
 	}
-	return &WorkspaceQuery{
-		config:       _q.config,
-		ctx:          _q.ctx.Clone(),
-		order:        append([]workspace.OrderOption{}, _q.order...),
-		inters:       append([]Interceptor{}, _q.inters...),
-		predicates:   append([]predicate.Workspace{}, _q.predicates...),
-		withOwner:    _q.withOwner.Clone(),
-		withProjects: _q.withProjects.Clone(),
+	return &ProjectQuery{
+		config:        _q.config,
+		ctx:           _q.ctx.Clone(),
+		order:         append([]project.OrderOption{}, _q.order...),
+		inters:        append([]Interceptor{}, _q.inters...),
+		predicates:    append([]predicate.Project{}, _q.predicates...),
+		withWorkspace: _q.withWorkspace.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
-// WithOwner tells the query-builder to eager-load the nodes that are connected to
-// the "owner" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *WorkspaceQuery) WithOwner(opts ...func(*UserQuery)) *WorkspaceQuery {
-	query := (&UserClient{config: _q.config}).Query()
+// WithWorkspace tells the query-builder to eager-load the nodes that are connected to
+// the "workspace" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ProjectQuery) WithWorkspace(opts ...func(*WorkspaceQuery)) *ProjectQuery {
+	query := (&WorkspaceClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withOwner = query
-	return _q
-}
-
-// WithProjects tells the query-builder to eager-load the nodes that are connected to
-// the "projects" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *WorkspaceQuery) WithProjects(opts ...func(*ProjectQuery)) *WorkspaceQuery {
-	query := (&ProjectClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withProjects = query
+	_q.withWorkspace = query
 	return _q
 }
 
@@ -340,15 +303,15 @@ func (_q *WorkspaceQuery) WithProjects(opts ...func(*ProjectQuery)) *WorkspaceQu
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.Workspace.Query().
-//		GroupBy(workspace.FieldName).
+//	client.Project.Query().
+//		GroupBy(project.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *WorkspaceQuery) GroupBy(field string, fields ...string) *WorkspaceGroupBy {
+func (_q *ProjectQuery) GroupBy(field string, fields ...string) *ProjectGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &WorkspaceGroupBy{build: _q}
+	grbuild := &ProjectGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = workspace.Label
+	grbuild.label = project.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -362,23 +325,23 @@ func (_q *WorkspaceQuery) GroupBy(field string, fields ...string) *WorkspaceGrou
 //		Name string `json:"name,omitempty"`
 //	}
 //
-//	client.Workspace.Query().
-//		Select(workspace.FieldName).
+//	client.Project.Query().
+//		Select(project.FieldName).
 //		Scan(ctx, &v)
-func (_q *WorkspaceQuery) Select(fields ...string) *WorkspaceSelect {
+func (_q *ProjectQuery) Select(fields ...string) *ProjectSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &WorkspaceSelect{WorkspaceQuery: _q}
-	sbuild.label = workspace.Label
+	sbuild := &ProjectSelect{ProjectQuery: _q}
+	sbuild.label = project.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a WorkspaceSelect configured with the given aggregations.
-func (_q *WorkspaceQuery) Aggregate(fns ...AggregateFunc) *WorkspaceSelect {
+// Aggregate returns a ProjectSelect configured with the given aggregations.
+func (_q *ProjectQuery) Aggregate(fns ...AggregateFunc) *ProjectSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *WorkspaceQuery) prepareQuery(ctx context.Context) error {
+func (_q *ProjectQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -390,7 +353,7 @@ func (_q *WorkspaceQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !workspace.ValidColumn(f) {
+		if !project.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -404,20 +367,19 @@ func (_q *WorkspaceQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *WorkspaceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Workspace, error) {
+func (_q *ProjectQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Project, error) {
 	var (
-		nodes       = []*Workspace{}
+		nodes       = []*Project{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
-			_q.withOwner != nil,
-			_q.withProjects != nil,
+		loadedTypes = [1]bool{
+			_q.withWorkspace != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*Workspace).scanValues(nil, columns)
+		return (*Project).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Workspace{config: _q.config}
+		node := &Project{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -431,27 +393,20 @@ func (_q *WorkspaceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Wo
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withOwner; query != nil {
-		if err := _q.loadOwner(ctx, query, nodes, nil,
-			func(n *Workspace, e *User) { n.Edges.Owner = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withProjects; query != nil {
-		if err := _q.loadProjects(ctx, query, nodes,
-			func(n *Workspace) { n.Edges.Projects = []*Project{} },
-			func(n *Workspace, e *Project) { n.Edges.Projects = append(n.Edges.Projects, e) }); err != nil {
+	if query := _q.withWorkspace; query != nil {
+		if err := _q.loadWorkspace(ctx, query, nodes, nil,
+			func(n *Project, e *Workspace) { n.Edges.Workspace = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *WorkspaceQuery) loadOwner(ctx context.Context, query *UserQuery, nodes []*Workspace, init func(*Workspace), assign func(*Workspace, *User)) error {
+func (_q *ProjectQuery) loadWorkspace(ctx context.Context, query *WorkspaceQuery, nodes []*Project, init func(*Project), assign func(*Project, *Workspace)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Workspace)
+	nodeids := make(map[uuid.UUID][]*Project)
 	for i := range nodes {
-		fk := nodes[i].OwnerID
+		fk := nodes[i].WorkspaceID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -460,7 +415,7 @@ func (_q *WorkspaceQuery) loadOwner(ctx context.Context, query *UserQuery, nodes
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(user.IDIn(ids...))
+	query.Where(workspace.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -468,7 +423,7 @@ func (_q *WorkspaceQuery) loadOwner(ctx context.Context, query *UserQuery, nodes
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "owner_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "workspace_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -476,38 +431,8 @@ func (_q *WorkspaceQuery) loadOwner(ctx context.Context, query *UserQuery, nodes
 	}
 	return nil
 }
-func (_q *WorkspaceQuery) loadProjects(ctx context.Context, query *ProjectQuery, nodes []*Workspace, init func(*Workspace), assign func(*Workspace, *Project)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Workspace)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(project.FieldWorkspaceID)
-	}
-	query.Where(predicate.Project(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(workspace.ProjectsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.WorkspaceID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "workspace_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
 
-func (_q *WorkspaceQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *ProjectQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -516,8 +441,8 @@ func (_q *WorkspaceQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *WorkspaceQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(workspace.Table, workspace.Columns, sqlgraph.NewFieldSpec(workspace.FieldID, field.TypeUUID))
+func (_q *ProjectQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(project.Table, project.Columns, sqlgraph.NewFieldSpec(project.FieldID, field.TypeUUID))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -526,14 +451,14 @@ func (_q *WorkspaceQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, workspace.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, project.FieldID)
 		for i := range fields {
-			if fields[i] != workspace.FieldID {
+			if fields[i] != project.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if _q.withOwner != nil {
-			_spec.Node.AddColumnOnce(workspace.FieldOwnerID)
+		if _q.withWorkspace != nil {
+			_spec.Node.AddColumnOnce(project.FieldWorkspaceID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
@@ -559,12 +484,12 @@ func (_q *WorkspaceQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *WorkspaceQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *ProjectQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(workspace.Table)
+	t1 := builder.Table(project.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = workspace.Columns
+		columns = project.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -591,28 +516,28 @@ func (_q *WorkspaceQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// WorkspaceGroupBy is the group-by builder for Workspace entities.
-type WorkspaceGroupBy struct {
+// ProjectGroupBy is the group-by builder for Project entities.
+type ProjectGroupBy struct {
 	selector
-	build *WorkspaceQuery
+	build *ProjectQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *WorkspaceGroupBy) Aggregate(fns ...AggregateFunc) *WorkspaceGroupBy {
+func (_g *ProjectGroupBy) Aggregate(fns ...AggregateFunc) *ProjectGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *WorkspaceGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *ProjectGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*WorkspaceQuery, *WorkspaceGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*ProjectQuery, *ProjectGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *WorkspaceGroupBy) sqlScan(ctx context.Context, root *WorkspaceQuery, v any) error {
+func (_g *ProjectGroupBy) sqlScan(ctx context.Context, root *ProjectQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -639,28 +564,28 @@ func (_g *WorkspaceGroupBy) sqlScan(ctx context.Context, root *WorkspaceQuery, v
 	return sql.ScanSlice(rows, v)
 }
 
-// WorkspaceSelect is the builder for selecting fields of Workspace entities.
-type WorkspaceSelect struct {
-	*WorkspaceQuery
+// ProjectSelect is the builder for selecting fields of Project entities.
+type ProjectSelect struct {
+	*ProjectQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *WorkspaceSelect) Aggregate(fns ...AggregateFunc) *WorkspaceSelect {
+func (_s *ProjectSelect) Aggregate(fns ...AggregateFunc) *ProjectSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *WorkspaceSelect) Scan(ctx context.Context, v any) error {
+func (_s *ProjectSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*WorkspaceQuery, *WorkspaceSelect](ctx, _s.WorkspaceQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*ProjectQuery, *ProjectSelect](ctx, _s.ProjectQuery, _s, _s.inters, v)
 }
 
-func (_s *WorkspaceSelect) sqlScan(ctx context.Context, root *WorkspaceQuery, v any) error {
+func (_s *ProjectSelect) sqlScan(ctx context.Context, root *ProjectQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

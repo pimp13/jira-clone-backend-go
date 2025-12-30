@@ -10,76 +10,67 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/pimp13/jira-clone-backend-go/ent/user"
+	"github.com/pimp13/jira-clone-backend-go/ent/project"
 	"github.com/pimp13/jira-clone-backend-go/ent/workspace"
 )
 
-// Workspace is the model entity for the Workspace schema.
-type Workspace struct {
+// Project is the model entity for the Project schema.
+type Project struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
-	// Slug holds the value of the "slug" field.
-	Slug string `json:"slug,omitempty"`
 	// ImageURL holds the value of the "image_url" field.
 	ImageURL *string `json:"image_url,omitempty"`
-	// InviteCode holds the value of the "invite_code" field.
-	InviteCode string `json:"invite_code,omitempty"`
+	// IsActive holds the value of the "is_active" field.
+	IsActive bool `json:"is_active,omitempty"`
+	// Description holds the value of the "description" field.
+	Description *string `json:"description,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// OwnerID holds the value of the "owner_id" field.
-	OwnerID uuid.UUID `json:"owner_id,omitempty"`
+	// WorkspaceID holds the value of the "workspace_id" field.
+	WorkspaceID uuid.UUID `json:"workspace_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the WorkspaceQuery when eager-loading is set.
-	Edges        WorkspaceEdges `json:"edges"`
+	// The values are being populated by the ProjectQuery when eager-loading is set.
+	Edges        ProjectEdges `json:"edges"`
 	selectValues sql.SelectValues
 }
 
-// WorkspaceEdges holds the relations/edges for other nodes in the graph.
-type WorkspaceEdges struct {
-	// Owner holds the value of the owner edge.
-	Owner *User `json:"owner,omitempty"`
-	// Projects holds the value of the projects edge.
-	Projects []*Project `json:"projects,omitempty"`
+// ProjectEdges holds the relations/edges for other nodes in the graph.
+type ProjectEdges struct {
+	// Workspace holds the value of the workspace edge.
+	Workspace *Workspace `json:"workspace,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [1]bool
 }
 
-// OwnerOrErr returns the Owner value or an error if the edge
+// WorkspaceOrErr returns the Workspace value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e WorkspaceEdges) OwnerOrErr() (*User, error) {
-	if e.Owner != nil {
-		return e.Owner, nil
+func (e ProjectEdges) WorkspaceOrErr() (*Workspace, error) {
+	if e.Workspace != nil {
+		return e.Workspace, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: user.Label}
+		return nil, &NotFoundError{label: workspace.Label}
 	}
-	return nil, &NotLoadedError{edge: "owner"}
-}
-
-// ProjectsOrErr returns the Projects value or an error if the edge
-// was not loaded in eager-loading.
-func (e WorkspaceEdges) ProjectsOrErr() ([]*Project, error) {
-	if e.loadedTypes[1] {
-		return e.Projects, nil
-	}
-	return nil, &NotLoadedError{edge: "projects"}
+	return nil, &NotLoadedError{edge: "workspace"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Workspace) scanValues(columns []string) ([]any, error) {
+func (*Project) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workspace.FieldName, workspace.FieldSlug, workspace.FieldImageURL, workspace.FieldInviteCode:
+		case project.FieldIsActive:
+			values[i] = new(sql.NullBool)
+		case project.FieldName, project.FieldImageURL, project.FieldDescription:
 			values[i] = new(sql.NullString)
-		case workspace.FieldCreatedAt, workspace.FieldUpdatedAt:
+		case project.FieldCreatedAt, project.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case workspace.FieldID, workspace.FieldOwnerID:
+		case project.FieldID, project.FieldWorkspaceID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -89,61 +80,62 @@ func (*Workspace) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the Workspace fields.
-func (_m *Workspace) assignValues(columns []string, values []any) error {
+// to the Project fields.
+func (_m *Project) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case workspace.FieldID:
+		case project.FieldID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				_m.ID = *value
 			}
-		case workspace.FieldName:
+		case project.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				_m.Name = value.String
 			}
-		case workspace.FieldSlug:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field slug", values[i])
-			} else if value.Valid {
-				_m.Slug = value.String
-			}
-		case workspace.FieldImageURL:
+		case project.FieldImageURL:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field image_url", values[i])
 			} else if value.Valid {
 				_m.ImageURL = new(string)
 				*_m.ImageURL = value.String
 			}
-		case workspace.FieldInviteCode:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field invite_code", values[i])
+		case project.FieldIsActive:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				_m.InviteCode = value.String
+				_m.IsActive = value.Bool
 			}
-		case workspace.FieldCreatedAt:
+		case project.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				_m.Description = new(string)
+				*_m.Description = value.String
+			}
+		case project.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				_m.CreatedAt = value.Time
 			}
-		case workspace.FieldUpdatedAt:
+		case project.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
-		case workspace.FieldOwnerID:
+		case project.FieldWorkspaceID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
+				return fmt.Errorf("unexpected type %T for field workspace_id", values[i])
 			} else if value != nil {
-				_m.OwnerID = *value
+				_m.WorkspaceID = *value
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -152,58 +144,55 @@ func (_m *Workspace) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the Workspace.
+// Value returns the ent.Value that was dynamically selected and assigned to the Project.
 // This includes values selected through modifiers, order, etc.
-func (_m *Workspace) Value(name string) (ent.Value, error) {
+func (_m *Project) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryOwner queries the "owner" edge of the Workspace entity.
-func (_m *Workspace) QueryOwner() *UserQuery {
-	return NewWorkspaceClient(_m.config).QueryOwner(_m)
+// QueryWorkspace queries the "workspace" edge of the Project entity.
+func (_m *Project) QueryWorkspace() *WorkspaceQuery {
+	return NewProjectClient(_m.config).QueryWorkspace(_m)
 }
 
-// QueryProjects queries the "projects" edge of the Workspace entity.
-func (_m *Workspace) QueryProjects() *ProjectQuery {
-	return NewWorkspaceClient(_m.config).QueryProjects(_m)
-}
-
-// Update returns a builder for updating this Workspace.
-// Note that you need to call Workspace.Unwrap() before calling this method if this Workspace
+// Update returns a builder for updating this Project.
+// Note that you need to call Project.Unwrap() before calling this method if this Project
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (_m *Workspace) Update() *WorkspaceUpdateOne {
-	return NewWorkspaceClient(_m.config).UpdateOne(_m)
+func (_m *Project) Update() *ProjectUpdateOne {
+	return NewProjectClient(_m.config).UpdateOne(_m)
 }
 
-// Unwrap unwraps the Workspace entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the Project entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (_m *Workspace) Unwrap() *Workspace {
+func (_m *Project) Unwrap() *Project {
 	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: Workspace is not a transactional entity")
+		panic("ent: Project is not a transactional entity")
 	}
 	_m.config.driver = _tx.drv
 	return _m
 }
 
 // String implements the fmt.Stringer.
-func (_m *Workspace) String() string {
+func (_m *Project) String() string {
 	var builder strings.Builder
-	builder.WriteString("Workspace(")
+	builder.WriteString("Project(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
-	builder.WriteString(", ")
-	builder.WriteString("slug=")
-	builder.WriteString(_m.Slug)
 	builder.WriteString(", ")
 	if v := _m.ImageURL; v != nil {
 		builder.WriteString("image_url=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
-	builder.WriteString("invite_code=")
-	builder.WriteString(_m.InviteCode)
+	builder.WriteString("is_active=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
+	builder.WriteString(", ")
+	if v := _m.Description; v != nil {
+		builder.WriteString("description=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
@@ -211,11 +200,11 @@ func (_m *Workspace) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("owner_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.OwnerID))
+	builder.WriteString("workspace_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.WorkspaceID))
 	builder.WriteByte(')')
 	return builder.String()
 }
 
-// Workspaces is a parsable slice of Workspace.
-type Workspaces []*Workspace
+// Projects is a parsable slice of Project.
+type Projects []*Project

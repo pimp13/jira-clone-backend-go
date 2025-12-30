@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/pimp13/jira-clone-backend-go/internal/module/auth"
+	workspace "github.com/pimp13/jira-clone-backend-go/internal/module/workspace/dto"
 	"github.com/pimp13/jira-clone-backend-go/pkg/res"
 	"github.com/pimp13/jira-clone-backend-go/pkg/util"
 )
@@ -58,12 +59,18 @@ func (ctrl *WorkspaceController) index(c echo.Context) error {
 func (ctrl *WorkspaceController) showById(c echo.Context) error {
 	workspaceId, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return res.JSON(c, res.ErrorMessage[struct{}]("bad request param", http.StatusUnauthorized))
+		return res.JSON(c, res.ErrorMessage[struct{}](
+			"bad request param",
+			http.StatusUnauthorized,
+		))
 	}
 
 	user, err := util.GetCurrentUser(c)
 	if err != nil {
-		return res.JSON(c, res.ErrorMessage[struct{}]("you unauth", http.StatusUnauthorized))
+		return res.JSON(c, res.ErrorMessage[struct{}](
+			"you unauth",
+			http.StatusUnauthorized,
+		))
 	}
 
 	resp := ctrl.workspaceService.ShowById(c.Request().Context(), workspaceId, user.ID)
@@ -83,7 +90,7 @@ func (ctrl *WorkspaceController) create(c echo.Context) error {
 		return res.JSON(c, res.ErrorMessage[struct{}]("you unauth", http.StatusUnauthorized))
 	}
 
-	var bodyData CreateWorkspaceDto
+	var bodyData workspace.CreateWorkspaceDto
 	validationErrs, err := res.ValidateRequest(c, &bodyData)
 	if err != nil {
 		return res.JSON(c, res.ErrorResponse[struct{}]("failed to parse body data", err))
