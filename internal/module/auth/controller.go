@@ -77,7 +77,7 @@ func (ac *AuthController) handleLogin(c echo.Context) error {
 		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   258000000,
+		MaxAge:   86400,
 	})
 
 	return c.JSON(resp.StatusCode, resp)
