@@ -3,6 +3,8 @@ package project
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/auth"
+	dto "github.com/pimp13/jira-clone-backend-go/internal/module/project/dto"
+	"github.com/pimp13/jira-clone-backend-go/pkg/res"
 )
 
 type ProjectController struct {
@@ -35,4 +37,18 @@ func (ctrl *ProjectController) index(c echo.Context) error {
 		"message": "Hello World",
 		"ok":      true,
 	})
+}
+
+//	@Tags		[Project] {v1}
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body	CreateProjectDto	true	"request body"
+//	@Router		/v1/project [POST]
+//	@Security	ApiKeyAuth
+func (ctrl *ProjectController) create(c echo.Context) error {
+	var bodyData dto.CreateProjectDto
+	validationErrs, err := res.ValidateRequest(c, &bodyData)
+	if err != nil {
+		return res.
+	}
 }
