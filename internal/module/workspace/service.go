@@ -11,7 +11,7 @@ import (
 	"github.com/pimp13/jira-clone-backend-go/ent"
 	entWorkspace "github.com/pimp13/jira-clone-backend-go/ent/workspace"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/fileupload"
-	workspace "github.com/pimp13/jira-clone-backend-go/internal/module/workspace/dto"
+	dto "github.com/pimp13/jira-clone-backend-go/internal/module/workspace/dto"
 	"github.com/pimp13/jira-clone-backend-go/pkg/res"
 	"github.com/pimp13/jira-clone-backend-go/pkg/util"
 )
@@ -20,20 +20,20 @@ type WorkspaceService interface {
 	Index(
 		ctx context.Context,
 		userId uuid.UUID,
-	) *res.Response[[]*workspace.WorkspaceResponse]
+	) *res.Response[[]*dto.WorkspaceResponse]
 
 	ShowById(
 		ctx context.Context,
 		workspaceId uuid.UUID,
 		userId uuid.UUID,
-	) *res.Response[*workspace.WorkspaceResponse]
+	) *res.Response[*dto.WorkspaceResponse]
 
 	Create(
 		ctx context.Context,
-		bodyData workspace.CreateWorkspaceDto,
+		bodyData dto.CreateWorkspaceDto,
 		file *multipart.FileHeader,
 		userId uuid.UUID,
-	) *res.Response[struct{}]
+	) *res.Response[*dto.CreateWorkspaceResponse]
 }
 
 type workspaceService struct {
@@ -51,7 +51,7 @@ func NewWorkspaceService(client *ent.Client) WorkspaceService {
 func (s *workspaceService) Index(
 	ctx context.Context,
 	userId uuid.UUID,
-) *res.Response[[]*workspace.WorkspaceResponse] {
+) *res.Response[[]*dto.WorkspaceResponse] {
 	initData, err := s.client.Workspace.Query().
 		Where(entWorkspace.OwnerIDEQ(userId)).
 		WithOwner().
@@ -60,15 +60,15 @@ func (s *workspaceService) Index(
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return res.ErrorMessage[[]*workspace.WorkspaceResponse](
+			return res.ErrorMessage[[]*dto.WorkspaceResponse](
 				"workspace is not found",
 				http.StatusBadRequest,
 			)
 		}
-		return res.ErrorMessage[[]*workspace.WorkspaceResponse]("failed to get workspace")
+		return res.ErrorMessage[[]*dto.WorkspaceResponse]("failed to get workspace")
 	}
 
-	finalData := make([]*workspace.WorkspaceResponse, 0, len(initData))
+	finalData := make([]*dto.WorkspaceResponse, 0, len(initData))
 	for _, ws := range initData {
 		finalData = append(finalData, ToWorkspaceResponse(ws))
 	}
@@ -80,7 +80,7 @@ func (s *workspaceService) ShowById(
 	ctx context.Context,
 	workspaceId uuid.UUID,
 	userId uuid.UUID,
-) *res.Response[*workspace.WorkspaceResponse] {
+) *res.Response[*dto.WorkspaceResponse] {
 	initData, err := s.client.Workspace.Query().
 		Where(entWorkspace.IDEQ(workspaceId)).
 		WithOwner().
@@ -89,12 +89,12 @@ func (s *workspaceService) ShowById(
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return res.ErrorMessage[*workspace.WorkspaceResponse](
+			return res.ErrorMessage[*dto.WorkspaceResponse](
 				"workspace is not found",
 				http.StatusBadRequest,
 			)
 		}
-		return res.ErrorMessage[*workspace.WorkspaceResponse]("failed to get workspace")
+		return res.ErrorMessage[*dto.WorkspaceResponse]("failed to get workspace")
 	}
 
 	finalData := ToWorkspaceResponse(initData)
@@ -103,10 +103,10 @@ func (s *workspaceService) ShowById(
 
 func (s *workspaceService) Create(
 	ctx context.Context,
-	bodyData workspace.CreateWorkspaceDto,
+	bodyData dto.CreateWorkspaceDto,
 	file *multipart.FileHeader,
 	userId uuid.UUID,
-) *res.Response[struct{}] {
+) *res.Response[*dto.CreateWorkspaceResponse] {
 	var slug string
 	var err error
 
@@ -116,7 +116,7 @@ func (s *workspaceService) Create(
 		slug, err = s.generateUniqueSlug(ctx, bodyData.Name)
 	}
 	if err != nil {
-		return res.ErrorMessage[struct{}]("failed to generate slug")
+		return res.ErrorMessage[*dto.CreateWorkspaceResponse]("failed to generate slug")
 	}
 
 	// TODO: imageURL or nil or default placeholder image
@@ -126,7 +126,7 @@ func (s *workspaceService) Create(
 	if file != nil {
 		uploadResult, err := s.fileUploadService.UploadImage(ctx, file)
 		if err != nil {
-			return res.ErrorResponse[struct{}]("failed to upload file", err)
+			return res.ErrorResponse[*dto.CreateWorkspaceResponse]("failed to upload file", err)
 		}
 		imageURL = &uploadResult.URL
 		filePath = &uploadResult.FilePath
@@ -139,15 +139,21 @@ func (s *workspaceService) Create(
 		SetInviteCode(util.GenerateInviteCode(0)).
 		SetNillableImageURL(imageURL)
 
-	// TODO: return new workspaceId in response
-	if _, err := builder.Save(ctx); err != nil {
+	newWorkspace, err := builder.Save(ctx)
+	if err != nil {
 		if file != nil && filePath != nil {
 			_ = s.fileUploadService.DeleteImage(ctx, *filePath)
 		}
-		return res.ErrorResponse[struct{}]("failed to save workspace", err)
+		return res.ErrorResponse[*dto.CreateWorkspaceResponse]("failed to save workspace", err)
 	}
 
-	return res.SuccessMessage("workspace is saved by successfully!", http.StatusCreated)
+	return res.SuccessResponse(
+		&dto.CreateWorkspaceResponse{
+			ID: newWorkspace.ID,
+		},
+		"workspace is saved by successfully!",
+		http.StatusCreated,
+	)
 }
 
 func (s *workspaceService) generateUniqueSlug(ctx context.Context, title string) (string, error) {

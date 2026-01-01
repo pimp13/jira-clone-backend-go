@@ -25,3 +25,7 @@ type WorkspaceResponse struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	Owner *jwt.UserInfo `json:"owner,omitempty"`
 }
+
+type CreateWorkspaceResponse struct {
+	ID uuid.UUID `json:"id,omitempty"`
+}
