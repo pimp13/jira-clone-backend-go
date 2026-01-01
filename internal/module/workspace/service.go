@@ -139,6 +139,7 @@ func (s *workspaceService) Create(
 		SetInviteCode(util.GenerateInviteCode(0)).
 		SetNillableImageURL(imageURL)
 
+	// TODO: return new workspaceId in response
 	if _, err := builder.Save(ctx); err != nil {
 		if file != nil && filePath != nil {
 			_ = s.fileUploadService.DeleteImage(ctx, *filePath)

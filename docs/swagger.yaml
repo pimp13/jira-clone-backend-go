@@ -26,6 +26,17 @@ definitions:
     - name
     - password
     type: object
+  project.CreateProjectDto:
+    properties:
+      description:
+        type: string
+      isActive:
+        type: boolean
+      name:
+        type: string
+      workspaceId:
+        type: string
+    type: object
   workspace.CreateWorkspaceDto:
     properties:
       name:
@@ -99,6 +110,23 @@ paths:
     get:
       consumes:
       - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - '[Project] {v1}'
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/project.CreateProjectDto'
       produces:
       - application/json
       responses: {}
