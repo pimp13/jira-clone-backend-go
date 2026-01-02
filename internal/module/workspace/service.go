@@ -60,8 +60,6 @@ func (s *workspaceService) Index(
 	userID uuid.UUID,
 ) *res.Response[[]*dto.WorkspaceResponse] {
 	initData, err := s.client.Workspace.Query().
-		Where(entWorkspace.OwnerIDEQ(userID)).
-		WithOwner().
 		Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
 		All(ctx)
 
@@ -75,12 +73,12 @@ func (s *workspaceService) Index(
 		return res.ErrorMessage[[]*dto.WorkspaceResponse]("failed to get workspace")
 	}
 
-	finalData := make([]*dto.WorkspaceResponse, 0, len(initData))
-	for _, ws := range initData {
-		finalData = append(finalData, ToWorkspaceResponse(ws))
-	}
+	_ = make([]*dto.WorkspaceResponse, 0, len(initData))
+	// for _, ws := range initData {
+	// 	finalData = append(finalData, ToWorkspaceResponse(ws))
+	// }
 
-	return res.SuccessResponse(finalData, "")
+	return res.SuccessResponse([]*dto.WorkspaceResponse{}, "")
 }
 
 func (s *workspaceService) ShowById(
@@ -88,24 +86,29 @@ func (s *workspaceService) ShowById(
 	workspaceId uuid.UUID,
 	userID uuid.UUID,
 ) *res.Response[*dto.WorkspaceResponse] {
-	initData, err := s.client.Workspace.Query().
-		Where(entWorkspace.IDEQ(workspaceId)).
-		WithOwner().
-		Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
-		Only(ctx)
+	// initData, err := s.client.Workspace.Query().
+	// 	Where(entWorkspace.IDEQ(workspaceId)).
+	// 	Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
+	// 	Only(ctx)
 
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return res.ErrorMessage[*dto.WorkspaceResponse](
-				"workspace is not found",
-				http.StatusBadRequest,
-			)
-		}
-		return res.ErrorMessage[*dto.WorkspaceResponse]("failed to get workspace")
-	}
+	// if err != nil {
+	// 	if ent.IsNotFound(err) {
+	// 		return res.ErrorMessage[*dto.WorkspaceResponse](
+	// 			"workspace is not found",
+	// 			http.StatusBadRequest,
+	// 		)
+	// 	}
+	// 	return res.ErrorMessage[*dto.WorkspaceResponse]("failed to get workspace")
+	// }
 
-	finalData := ToWorkspaceResponse(initData)
-	return res.SuccessResponse(finalData, "")
+	// // finalData := ToWorkspaceResponse(initData)
+	// return res.SuccessResponse(*dto.WorkspaceResponse{
+	// 	ID: initData.ID,
+	// 	Name: initData.Name,
+	// 	Slug: initData.Slug,
+
+	// }, "")
+	return nil
 }
 
 func (s *workspaceService) Create(
@@ -142,7 +145,6 @@ func (s *workspaceService) Create(
 	builder := s.client.Workspace.Create().
 		SetName(bodyData.Name).
 		SetSlug(slug).
-		SetOwnerID(userID).
 		SetInviteCode(util.GenerateInviteCode(0)).
 		SetNillableImageURL(imageURL).
 		SetNillableImagePath(filePath)

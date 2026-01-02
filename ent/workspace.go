@@ -10,7 +10,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/pimp13/jira-clone-backend-go/ent/user"
 	"github.com/pimp13/jira-clone-backend-go/ent/workspace"
 )
 
@@ -33,8 +32,6 @@ type Workspace struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// OwnerID holds the value of the "owner_id" field.
-	OwnerID uuid.UUID `json:"owner_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the WorkspaceQuery when eager-loading is set.
 	Edges        WorkspaceEdges `json:"edges"`
@@ -43,8 +40,8 @@ type Workspace struct {
 
 // WorkspaceEdges holds the relations/edges for other nodes in the graph.
 type WorkspaceEdges struct {
-	// Owner holds the value of the owner edge.
-	Owner *User `json:"owner,omitempty"`
+	// Memberships holds the value of the memberships edge.
+	Memberships []*Membership `json:"memberships,omitempty"`
 	// Projects holds the value of the projects edge.
 	Projects []*Project `json:"projects,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -52,15 +49,13 @@ type WorkspaceEdges struct {
 	loadedTypes [2]bool
 }
 
-// OwnerOrErr returns the Owner value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e WorkspaceEdges) OwnerOrErr() (*User, error) {
-	if e.Owner != nil {
-		return e.Owner, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: user.Label}
+// MembershipsOrErr returns the Memberships value or an error if the edge
+// was not loaded in eager-loading.
+func (e WorkspaceEdges) MembershipsOrErr() ([]*Membership, error) {
+	if e.loadedTypes[0] {
+		return e.Memberships, nil
 	}
-	return nil, &NotLoadedError{edge: "owner"}
+	return nil, &NotLoadedError{edge: "memberships"}
 }
 
 // ProjectsOrErr returns the Projects value or an error if the edge
@@ -81,7 +76,7 @@ func (*Workspace) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case workspace.FieldCreatedAt, workspace.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case workspace.FieldID, workspace.FieldOwnerID:
+		case workspace.FieldID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -148,12 +143,6 @@ func (_m *Workspace) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
-		case workspace.FieldOwnerID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
-			} else if value != nil {
-				_m.OwnerID = *value
-			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -167,9 +156,9 @@ func (_m *Workspace) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryOwner queries the "owner" edge of the Workspace entity.
-func (_m *Workspace) QueryOwner() *UserQuery {
-	return NewWorkspaceClient(_m.config).QueryOwner(_m)
+// QueryMemberships queries the "memberships" edge of the Workspace entity.
+func (_m *Workspace) QueryMemberships() *MembershipQuery {
+	return NewWorkspaceClient(_m.config).QueryMemberships(_m)
 }
 
 // QueryProjects queries the "projects" edge of the Workspace entity.
@@ -224,9 +213,6 @@ func (_m *Workspace) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("owner_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.OwnerID))
 	builder.WriteByte(')')
 	return builder.String()
 }

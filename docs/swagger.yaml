@@ -48,9 +48,13 @@ definitions:
     required:
     - name
     type: object
-  workspace.UpdateWorkspaceResponse:
+  workspace.UpdateWorkspaceDto:
     properties:
-      id:
+      name:
+        maxLength: 195
+        minLength: 3
+        type: string
+      slug:
         type: string
     type: object
 info:
@@ -193,7 +197,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/workspace.UpdateWorkspaceResponse'
+          $ref: '#/definitions/workspace.UpdateWorkspaceDto'
       - description: workspace id
         in: path
         name: id

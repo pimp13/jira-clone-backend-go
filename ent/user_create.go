@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/pimp13/jira-clone-backend-go/ent/membership"
 	"github.com/pimp13/jira-clone-backend-go/ent/user"
-	"github.com/pimp13/jira-clone-backend-go/ent/workspace"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -124,19 +124,19 @@ func (_c *UserCreate) SetNillableID(v *uuid.UUID) *UserCreate {
 	return _c
 }
 
-// AddWorkspaceIDs adds the "workspaces" edge to the Workspace entity by IDs.
-func (_c *UserCreate) AddWorkspaceIDs(ids ...uuid.UUID) *UserCreate {
-	_c.mutation.AddWorkspaceIDs(ids...)
+// AddMembershipIDs adds the "memberships" edge to the Membership entity by IDs.
+func (_c *UserCreate) AddMembershipIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddMembershipIDs(ids...)
 	return _c
 }
 
-// AddWorkspaces adds the "workspaces" edges to the Workspace entity.
-func (_c *UserCreate) AddWorkspaces(v ...*Workspace) *UserCreate {
+// AddMemberships adds the "memberships" edges to the Membership entity.
+func (_c *UserCreate) AddMemberships(v ...*Membership) *UserCreate {
 	ids := make([]uuid.UUID, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _c.AddWorkspaceIDs(ids...)
+	return _c.AddMembershipIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -303,15 +303,15 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := _c.mutation.WorkspacesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.MembershipsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.WorkspacesTable,
-			Columns: []string{user.WorkspacesColumn},
+			Table:   user.MembershipsTable,
+			Columns: []string{user.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workspace.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

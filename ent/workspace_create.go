@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/pimp13/jira-clone-backend-go/ent/membership"
 	"github.com/pimp13/jira-clone-backend-go/ent/project"
-	"github.com/pimp13/jira-clone-backend-go/ent/user"
 	"github.com/pimp13/jira-clone-backend-go/ent/workspace"
 )
 
@@ -97,12 +97,6 @@ func (_c *WorkspaceCreate) SetNillableUpdatedAt(v *time.Time) *WorkspaceCreate {
 	return _c
 }
 
-// SetOwnerID sets the "owner_id" field.
-func (_c *WorkspaceCreate) SetOwnerID(v uuid.UUID) *WorkspaceCreate {
-	_c.mutation.SetOwnerID(v)
-	return _c
-}
-
 // SetID sets the "id" field.
 func (_c *WorkspaceCreate) SetID(v uuid.UUID) *WorkspaceCreate {
 	_c.mutation.SetID(v)
@@ -117,9 +111,19 @@ func (_c *WorkspaceCreate) SetNillableID(v *uuid.UUID) *WorkspaceCreate {
 	return _c
 }
 
-// SetOwner sets the "owner" edge to the User entity.
-func (_c *WorkspaceCreate) SetOwner(v *User) *WorkspaceCreate {
-	return _c.SetOwnerID(v.ID)
+// AddMembershipIDs adds the "memberships" edge to the Membership entity by IDs.
+func (_c *WorkspaceCreate) AddMembershipIDs(ids ...uuid.UUID) *WorkspaceCreate {
+	_c.mutation.AddMembershipIDs(ids...)
+	return _c
+}
+
+// AddMemberships adds the "memberships" edges to the Membership entity.
+func (_c *WorkspaceCreate) AddMemberships(v ...*Membership) *WorkspaceCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMembershipIDs(ids...)
 }
 
 // AddProjectIDs adds the "projects" edge to the Project entity by IDs.
@@ -218,12 +222,6 @@ func (_c *WorkspaceCreate) check() error {
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Workspace.updated_at"`)}
 	}
-	if _, ok := _c.mutation.OwnerID(); !ok {
-		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Workspace.owner_id"`)}
-	}
-	if len(_c.mutation.OwnerIDs()) == 0 {
-		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Workspace.owner"`)}
-	}
 	return nil
 }
 
@@ -287,21 +285,20 @@ func (_c *WorkspaceCreate) createSpec() (*Workspace, *sqlgraph.CreateSpec) {
 		_spec.SetField(workspace.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := _c.mutation.OwnerIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.MembershipsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   workspace.OwnerTable,
-			Columns: []string{workspace.OwnerColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workspace.MembershipsTable,
+			Columns: []string{workspace.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.OwnerID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.ProjectsIDs(); len(nodes) > 0 {

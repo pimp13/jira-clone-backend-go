@@ -241,7 +241,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/workspace.UpdateWorkspaceResponse"
+                            "$ref": "#/definitions/workspace.UpdateWorkspaceDto"
                         }
                     },
                     {
@@ -327,10 +327,15 @@ const docTemplate = `{
                 }
             }
         },
-        "workspace.UpdateWorkspaceResponse": {
+        "workspace.UpdateWorkspaceDto": {
             "type": "object",
             "properties": {
-                "id": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 195,
+                    "minLength": 3
+                },
+                "slug": {
                     "type": "string"
                 }
             }

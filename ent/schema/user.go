@@ -33,13 +33,13 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("workspaces", Workspace.Type),
+		edge.To("memberships", Membership.Type),
 	}
 }
 
 func (User) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("email").Unique(),
-		index.Fields("is_active"),
+		index.Fields("is_active", "role"),
 	}
 }

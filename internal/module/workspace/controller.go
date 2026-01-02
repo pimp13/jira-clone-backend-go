@@ -115,8 +115,8 @@ func (ctrl *WorkspaceController) create(c echo.Context) error {
 // @Tags		[Workspace] {v1}
 // @Accept		json
 // @Produce	json
-// @Param		request	body	UpdateWorkspaceResponse	true	"request body"
-// @Param		id		path	string					true	"workspace id"
+// @Param		request	body	UpdateWorkspaceDto	true	"request body"
+// @Param		id		path	string				true	"workspace id"
 // @Router		/v1/workspace/{id} [PATCH]
 // @Security	ApiKeyAuth
 func (ctrl *WorkspaceController) update(c echo.Context) error {

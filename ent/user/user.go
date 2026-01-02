@@ -32,17 +32,17 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// EdgeWorkspaces holds the string denoting the workspaces edge name in mutations.
-	EdgeWorkspaces = "workspaces"
+	// EdgeMemberships holds the string denoting the memberships edge name in mutations.
+	EdgeMemberships = "memberships"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// WorkspacesTable is the table that holds the workspaces relation/edge.
-	WorkspacesTable = "workspaces"
-	// WorkspacesInverseTable is the table name for the Workspace entity.
-	// It exists in this package in order to avoid circular dependency with the "workspace" package.
-	WorkspacesInverseTable = "workspaces"
-	// WorkspacesColumn is the table column denoting the workspaces relation/edge.
-	WorkspacesColumn = "owner_id"
+	// MembershipsTable is the table that holds the memberships relation/edge.
+	MembershipsTable = "memberships"
+	// MembershipsInverseTable is the table name for the Membership entity.
+	// It exists in this package in order to avoid circular dependency with the "membership" package.
+	MembershipsInverseTable = "memberships"
+	// MembershipsColumn is the table column denoting the memberships relation/edge.
+	MembershipsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -161,23 +161,23 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
-// ByWorkspacesCount orders the results by workspaces count.
-func ByWorkspacesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByMembershipsCount orders the results by memberships count.
+func ByMembershipsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newWorkspacesStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newMembershipsStep(), opts...)
 	}
 }
 
-// ByWorkspaces orders the results by workspaces terms.
-func ByWorkspaces(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByMemberships orders the results by memberships terms.
+func ByMemberships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newWorkspacesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newMembershipsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newWorkspacesStep() *sqlgraph.Step {
+func newMembershipsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(WorkspacesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, WorkspacesTable, WorkspacesColumn),
+		sqlgraph.To(MembershipsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MembershipsTable, MembershipsColumn),
 	)
 }

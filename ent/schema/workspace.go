@@ -27,21 +27,13 @@ func (Workspace) Fields() []ent.Field {
 		field.String("invite_code").Immutable().NotEmpty().MaxLen(64).MinLen(64).Unique(),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
-
-		// forign keys
-		field.UUID("owner_id", uuid.UUID{}),
 	}
 }
 
 // Edges of the Workspace.
 func (Workspace) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("owner", User.Type).
-			Ref("workspaces").
-			Unique().
-			Required().
-			Field("owner_id"),
-
+		edge.To("memberships", Membership.Type),
 		edge.To("projects", Project.Type),
 	}
 }
@@ -50,6 +42,5 @@ func (Workspace) Edges() []ent.Edge {
 func (Workspace) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("slug").Unique(),
-		index.Fields("owner_id"),
 	}
 }

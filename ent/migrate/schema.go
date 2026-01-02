@@ -8,6 +8,47 @@ import (
 )
 
 var (
+	// MembershipsColumns holds the columns for the "memberships" table.
+	MembershipsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "admin", "member", "viewer"}},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "invited", "removed"}},
+		{Name: "joined_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "workspace_id", Type: field.TypeUUID},
+	}
+	// MembershipsTable holds the schema information for the "memberships" table.
+	MembershipsTable = &schema.Table{
+		Name:       "memberships",
+		Columns:    MembershipsColumns,
+		PrimaryKey: []*schema.Column{MembershipsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "memberships_users_memberships",
+				Columns:    []*schema.Column{MembershipsColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "memberships_workspaces_memberships",
+				Columns:    []*schema.Column{MembershipsColumns[5]},
+				RefColumns: []*schema.Column{WorkspacesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "membership_role_status",
+				Unique:  false,
+				Columns: []*schema.Column{MembershipsColumns[1], MembershipsColumns[2]},
+			},
+			{
+				Name:    "membership_user_id_workspace_id",
+				Unique:  true,
+				Columns: []*schema.Column{MembershipsColumns[4], MembershipsColumns[5]},
+			},
+		},
+	}
 	// ProjectsColumns holds the columns for the "projects" table.
 	ProjectsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -65,9 +106,9 @@ var (
 				Columns: []*schema.Column{UsersColumns[1]},
 			},
 			{
-				Name:    "user_is_active",
+				Name:    "user_is_active_role",
 				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[4]},
+				Columns: []*schema.Column{UsersColumns[4], UsersColumns[6]},
 			},
 		},
 	}
@@ -81,36 +122,23 @@ var (
 		{Name: "invite_code", Type: field.TypeString, Unique: true, Size: 64},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "owner_id", Type: field.TypeUUID},
 	}
 	// WorkspacesTable holds the schema information for the "workspaces" table.
 	WorkspacesTable = &schema.Table{
 		Name:       "workspaces",
 		Columns:    WorkspacesColumns,
 		PrimaryKey: []*schema.Column{WorkspacesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "workspaces_users_workspaces",
-				Columns:    []*schema.Column{WorkspacesColumns[8]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "workspace_slug",
 				Unique:  true,
 				Columns: []*schema.Column{WorkspacesColumns[2]},
 			},
-			{
-				Name:    "workspace_owner_id",
-				Unique:  false,
-				Columns: []*schema.Column{WorkspacesColumns[8]},
-			},
 		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		MembershipsTable,
 		ProjectsTable,
 		UsersTable,
 		WorkspacesTable,
@@ -118,6 +146,7 @@ var (
 )
 
 func init() {
+	MembershipsTable.ForeignKeys[0].RefTable = UsersTable
+	MembershipsTable.ForeignKeys[1].RefTable = WorkspacesTable
 	ProjectsTable.ForeignKeys[0].RefTable = WorkspacesTable
-	WorkspacesTable.ForeignKeys[0].RefTable = UsersTable
 }

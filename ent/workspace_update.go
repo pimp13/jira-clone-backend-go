@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/pimp13/jira-clone-backend-go/ent/membership"
 	"github.com/pimp13/jira-clone-backend-go/ent/predicate"
 	"github.com/pimp13/jira-clone-backend-go/ent/project"
-	"github.com/pimp13/jira-clone-backend-go/ent/user"
 	"github.com/pimp13/jira-clone-backend-go/ent/workspace"
 )
 
@@ -105,23 +105,19 @@ func (_u *WorkspaceUpdate) SetUpdatedAt(v time.Time) *WorkspaceUpdate {
 	return _u
 }
 
-// SetOwnerID sets the "owner_id" field.
-func (_u *WorkspaceUpdate) SetOwnerID(v uuid.UUID) *WorkspaceUpdate {
-	_u.mutation.SetOwnerID(v)
+// AddMembershipIDs adds the "memberships" edge to the Membership entity by IDs.
+func (_u *WorkspaceUpdate) AddMembershipIDs(ids ...uuid.UUID) *WorkspaceUpdate {
+	_u.mutation.AddMembershipIDs(ids...)
 	return _u
 }
 
-// SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
-func (_u *WorkspaceUpdate) SetNillableOwnerID(v *uuid.UUID) *WorkspaceUpdate {
-	if v != nil {
-		_u.SetOwnerID(*v)
+// AddMemberships adds the "memberships" edges to the Membership entity.
+func (_u *WorkspaceUpdate) AddMemberships(v ...*Membership) *WorkspaceUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return _u
-}
-
-// SetOwner sets the "owner" edge to the User entity.
-func (_u *WorkspaceUpdate) SetOwner(v *User) *WorkspaceUpdate {
-	return _u.SetOwnerID(v.ID)
+	return _u.AddMembershipIDs(ids...)
 }
 
 // AddProjectIDs adds the "projects" edge to the Project entity by IDs.
@@ -144,10 +140,25 @@ func (_u *WorkspaceUpdate) Mutation() *WorkspaceMutation {
 	return _u.mutation
 }
 
-// ClearOwner clears the "owner" edge to the User entity.
-func (_u *WorkspaceUpdate) ClearOwner() *WorkspaceUpdate {
-	_u.mutation.ClearOwner()
+// ClearMemberships clears all "memberships" edges to the Membership entity.
+func (_u *WorkspaceUpdate) ClearMemberships() *WorkspaceUpdate {
+	_u.mutation.ClearMemberships()
 	return _u
+}
+
+// RemoveMembershipIDs removes the "memberships" edge to Membership entities by IDs.
+func (_u *WorkspaceUpdate) RemoveMembershipIDs(ids ...uuid.UUID) *WorkspaceUpdate {
+	_u.mutation.RemoveMembershipIDs(ids...)
+	return _u
+}
+
+// RemoveMemberships removes "memberships" edges to Membership entities.
+func (_u *WorkspaceUpdate) RemoveMemberships(v ...*Membership) *WorkspaceUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMembershipIDs(ids...)
 }
 
 // ClearProjects clears all "projects" edges to the Project entity.
@@ -219,9 +230,6 @@ func (_u *WorkspaceUpdate) check() error {
 			return &ValidationError{Name: "slug", err: fmt.Errorf(`ent: validator failed for field "Workspace.slug": %w`, err)}
 		}
 	}
-	if _u.mutation.OwnerCleared() && len(_u.mutation.OwnerIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Workspace.owner"`)
-	}
 	return nil
 }
 
@@ -258,28 +266,44 @@ func (_u *WorkspaceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(workspace.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if _u.mutation.OwnerCleared() {
+	if _u.mutation.MembershipsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   workspace.OwnerTable,
-			Columns: []string{workspace.OwnerColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workspace.MembershipsTable,
+			Columns: []string{workspace.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.OwnerIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedMembershipsIDs(); len(nodes) > 0 && !_u.mutation.MembershipsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   workspace.OwnerTable,
-			Columns: []string{workspace.OwnerColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workspace.MembershipsTable,
+			Columns: []string{workspace.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MembershipsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workspace.MembershipsTable,
+			Columns: []string{workspace.MembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -426,23 +450,19 @@ func (_u *WorkspaceUpdateOne) SetUpdatedAt(v time.Time) *WorkspaceUpdateOne {
 	return _u
 }
 
-// SetOwnerID sets the "owner_id" field.
-func (_u *WorkspaceUpdateOne) SetOwnerID(v uuid.UUID) *WorkspaceUpdateOne {
-	_u.mutation.SetOwnerID(v)
+// AddMembershipIDs adds the "memberships" edge to the Membership entity by IDs.
+func (_u *WorkspaceUpdateOne) AddMembershipIDs(ids ...uuid.UUID) *WorkspaceUpdateOne {
+	_u.mutation.AddMembershipIDs(ids...)
 	return _u
 }
 
-// SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
-func (_u *WorkspaceUpdateOne) SetNillableOwnerID(v *uuid.UUID) *WorkspaceUpdateOne {
-	if v != nil {
-		_u.SetOwnerID(*v)
+// AddMemberships adds the "memberships" edges to the Membership entity.
+func (_u *WorkspaceUpdateOne) AddMemberships(v ...*Membership) *WorkspaceUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return _u
-}
-
-// SetOwner sets the "owner" edge to the User entity.
-func (_u *WorkspaceUpdateOne) SetOwner(v *User) *WorkspaceUpdateOne {
-	return _u.SetOwnerID(v.ID)
+	return _u.AddMembershipIDs(ids...)
 }
 
 // AddProjectIDs adds the "projects" edge to the Project entity by IDs.
@@ -465,10 +485,25 @@ func (_u *WorkspaceUpdateOne) Mutation() *WorkspaceMutation {
 	return _u.mutation
 }
 
-// ClearOwner clears the "owner" edge to the User entity.
-func (_u *WorkspaceUpdateOne) ClearOwner() *WorkspaceUpdateOne {
-	_u.mutation.ClearOwner()
+// ClearMemberships clears all "memberships" edges to the Membership entity.
+func (_u *WorkspaceUpdateOne) ClearMemberships() *WorkspaceUpdateOne {
+	_u.mutation.ClearMemberships()
 	return _u
+}
+
+// RemoveMembershipIDs removes the "memberships" edge to Membership entities by IDs.
+func (_u *WorkspaceUpdateOne) RemoveMembershipIDs(ids ...uuid.UUID) *WorkspaceUpdateOne {
+	_u.mutation.RemoveMembershipIDs(ids...)
+	return _u
+}
+
+// RemoveMemberships removes "memberships" edges to Membership entities.
+func (_u *WorkspaceUpdateOne) RemoveMemberships(v ...*Membership) *WorkspaceUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMembershipIDs(ids...)
 }
 
 // ClearProjects clears all "projects" edges to the Project entity.
@@ -553,9 +588,6 @@ func (_u *WorkspaceUpdateOne) check() error {
 			return &ValidationError{Name: "slug", err: fmt.Errorf(`ent: validator failed for field "Workspace.slug": %w`, err)}
 		}
 	}
-	if _u.mutation.OwnerCleared() && len(_u.mutation.OwnerIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Workspace.owner"`)
-	}
 	return nil
 }
 
@@ -609,28 +641,44 @@ func (_u *WorkspaceUpdateOne) sqlSave(ctx context.Context) (_node *Workspace, er
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(workspace.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if _u.mutation.OwnerCleared() {
+	if _u.mutation.MembershipsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   workspace.OwnerTable,
-			Columns: []string{workspace.OwnerColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workspace.MembershipsTable,
+			Columns: []string{workspace.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.OwnerIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedMembershipsIDs(); len(nodes) > 0 && !_u.mutation.MembershipsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   workspace.OwnerTable,
-			Columns: []string{workspace.OwnerColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workspace.MembershipsTable,
+			Columns: []string{workspace.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MembershipsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workspace.MembershipsTable,
+			Columns: []string{workspace.MembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(membership.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pimp13/jira-clone-backend-go/ent/membership"
 	"github.com/pimp13/jira-clone-backend-go/ent/project"
 	"github.com/pimp13/jira-clone-backend-go/ent/schema"
 	"github.com/pimp13/jira-clone-backend-go/ent/user"
@@ -16,6 +17,16 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	membershipFields := schema.Membership{}.Fields()
+	_ = membershipFields
+	// membershipDescJoinedAt is the schema descriptor for joined_at field.
+	membershipDescJoinedAt := membershipFields[3].Descriptor()
+	// membership.DefaultJoinedAt holds the default value on creation for the joined_at field.
+	membership.DefaultJoinedAt = membershipDescJoinedAt.Default.(func() time.Time)
+	// membershipDescID is the schema descriptor for id field.
+	membershipDescID := membershipFields[0].Descriptor()
+	// membership.DefaultID holds the default value on creation for the id field.
+	membership.DefaultID = membershipDescID.Default.(func() uuid.UUID)
 	projectFields := schema.Project{}.Fields()
 	_ = projectFields
 	// projectDescName is the schema descriptor for name field.

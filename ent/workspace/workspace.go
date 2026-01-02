@@ -29,21 +29,19 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// FieldOwnerID holds the string denoting the owner_id field in the database.
-	FieldOwnerID = "owner_id"
-	// EdgeOwner holds the string denoting the owner edge name in mutations.
-	EdgeOwner = "owner"
+	// EdgeMemberships holds the string denoting the memberships edge name in mutations.
+	EdgeMemberships = "memberships"
 	// EdgeProjects holds the string denoting the projects edge name in mutations.
 	EdgeProjects = "projects"
 	// Table holds the table name of the workspace in the database.
 	Table = "workspaces"
-	// OwnerTable is the table that holds the owner relation/edge.
-	OwnerTable = "workspaces"
-	// OwnerInverseTable is the table name for the User entity.
-	// It exists in this package in order to avoid circular dependency with the "user" package.
-	OwnerInverseTable = "users"
-	// OwnerColumn is the table column denoting the owner relation/edge.
-	OwnerColumn = "owner_id"
+	// MembershipsTable is the table that holds the memberships relation/edge.
+	MembershipsTable = "memberships"
+	// MembershipsInverseTable is the table name for the Membership entity.
+	// It exists in this package in order to avoid circular dependency with the "membership" package.
+	MembershipsInverseTable = "memberships"
+	// MembershipsColumn is the table column denoting the memberships relation/edge.
+	MembershipsColumn = "workspace_id"
 	// ProjectsTable is the table that holds the projects relation/edge.
 	ProjectsTable = "projects"
 	// ProjectsInverseTable is the table name for the Project entity.
@@ -63,7 +61,6 @@ var Columns = []string{
 	FieldInviteCode,
 	FieldCreatedAt,
 	FieldUpdatedAt,
-	FieldOwnerID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -136,15 +133,17 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
-// ByOwnerID orders the results by the owner_id field.
-func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldOwnerID, opts...).ToFunc()
+// ByMembershipsCount orders the results by memberships count.
+func ByMembershipsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMembershipsStep(), opts...)
+	}
 }
 
-// ByOwnerField orders the results by owner field.
-func ByOwnerField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByMemberships orders the results by memberships terms.
+func ByMemberships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newOwnerStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newMembershipsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -161,11 +160,11 @@ func ByProjects(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newProjectsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newOwnerStep() *sqlgraph.Step {
+func newMembershipsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(OwnerInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, OwnerTable, OwnerColumn),
+		sqlgraph.To(MembershipsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MembershipsTable, MembershipsColumn),
 	)
 }
 func newProjectsStep() *sqlgraph.Step {

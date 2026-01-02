@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/pimp13/jira-clone-backend-go/ent/membership"
 	"github.com/pimp13/jira-clone-backend-go/ent/project"
 	"github.com/pimp13/jira-clone-backend-go/ent/user"
 	"github.com/pimp13/jira-clone-backend-go/ent/workspace"
@@ -26,6 +27,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Membership is the client for interacting with the Membership builders.
+	Membership *MembershipClient
 	// Project is the client for interacting with the Project builders.
 	Project *ProjectClient
 	// User is the client for interacting with the User builders.
@@ -43,6 +46,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Membership = NewMembershipClient(c.config)
 	c.Project = NewProjectClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.Workspace = NewWorkspaceClient(c.config)
@@ -136,11 +140,12 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:       ctx,
-		config:    cfg,
-		Project:   NewProjectClient(cfg),
-		User:      NewUserClient(cfg),
-		Workspace: NewWorkspaceClient(cfg),
+		ctx:        ctx,
+		config:     cfg,
+		Membership: NewMembershipClient(cfg),
+		Project:    NewProjectClient(cfg),
+		User:       NewUserClient(cfg),
+		Workspace:  NewWorkspaceClient(cfg),
 	}, nil
 }
 
@@ -158,18 +163,19 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:       ctx,
-		config:    cfg,
-		Project:   NewProjectClient(cfg),
-		User:      NewUserClient(cfg),
-		Workspace: NewWorkspaceClient(cfg),
+		ctx:        ctx,
+		config:     cfg,
+		Membership: NewMembershipClient(cfg),
+		Project:    NewProjectClient(cfg),
+		User:       NewUserClient(cfg),
+		Workspace:  NewWorkspaceClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Project.
+//		Membership.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -191,6 +197,7 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Membership.Use(hooks...)
 	c.Project.Use(hooks...)
 	c.User.Use(hooks...)
 	c.Workspace.Use(hooks...)
@@ -199,6 +206,7 @@ func (c *Client) Use(hooks ...Hook) {
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.Membership.Intercept(interceptors...)
 	c.Project.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 	c.Workspace.Intercept(interceptors...)
@@ -207,6 +215,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *MembershipMutation:
+		return c.Membership.mutate(ctx, m)
 	case *ProjectMutation:
 		return c.Project.mutate(ctx, m)
 	case *UserMutation:
@@ -215,6 +225,171 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Workspace.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// MembershipClient is a client for the Membership schema.
+type MembershipClient struct {
+	config
+}
+
+// NewMembershipClient returns a client for the Membership from the given config.
+func NewMembershipClient(c config) *MembershipClient {
+	return &MembershipClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `membership.Hooks(f(g(h())))`.
+func (c *MembershipClient) Use(hooks ...Hook) {
+	c.hooks.Membership = append(c.hooks.Membership, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `membership.Intercept(f(g(h())))`.
+func (c *MembershipClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Membership = append(c.inters.Membership, interceptors...)
+}
+
+// Create returns a builder for creating a Membership entity.
+func (c *MembershipClient) Create() *MembershipCreate {
+	mutation := newMembershipMutation(c.config, OpCreate)
+	return &MembershipCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Membership entities.
+func (c *MembershipClient) CreateBulk(builders ...*MembershipCreate) *MembershipCreateBulk {
+	return &MembershipCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MembershipClient) MapCreateBulk(slice any, setFunc func(*MembershipCreate, int)) *MembershipCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MembershipCreateBulk{err: fmt.Errorf("calling to MembershipClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MembershipCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MembershipCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Membership.
+func (c *MembershipClient) Update() *MembershipUpdate {
+	mutation := newMembershipMutation(c.config, OpUpdate)
+	return &MembershipUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MembershipClient) UpdateOne(_m *Membership) *MembershipUpdateOne {
+	mutation := newMembershipMutation(c.config, OpUpdateOne, withMembership(_m))
+	return &MembershipUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MembershipClient) UpdateOneID(id uuid.UUID) *MembershipUpdateOne {
+	mutation := newMembershipMutation(c.config, OpUpdateOne, withMembershipID(id))
+	return &MembershipUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Membership.
+func (c *MembershipClient) Delete() *MembershipDelete {
+	mutation := newMembershipMutation(c.config, OpDelete)
+	return &MembershipDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MembershipClient) DeleteOne(_m *Membership) *MembershipDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MembershipClient) DeleteOneID(id uuid.UUID) *MembershipDeleteOne {
+	builder := c.Delete().Where(membership.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MembershipDeleteOne{builder}
+}
+
+// Query returns a query builder for Membership.
+func (c *MembershipClient) Query() *MembershipQuery {
+	return &MembershipQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMembership},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Membership entity by its id.
+func (c *MembershipClient) Get(ctx context.Context, id uuid.UUID) (*Membership, error) {
+	return c.Query().Where(membership.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MembershipClient) GetX(ctx context.Context, id uuid.UUID) *Membership {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a Membership.
+func (c *MembershipClient) QueryUser(_m *Membership) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(membership.Table, membership.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, membership.UserTable, membership.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkspace queries the workspace edge of a Membership.
+func (c *MembershipClient) QueryWorkspace(_m *Membership) *WorkspaceQuery {
+	query := (&WorkspaceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(membership.Table, membership.FieldID, id),
+			sqlgraph.To(workspace.Table, workspace.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, membership.WorkspaceTable, membership.WorkspaceColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MembershipClient) Hooks() []Hook {
+	return c.hooks.Membership
+}
+
+// Interceptors returns the client interceptors.
+func (c *MembershipClient) Interceptors() []Interceptor {
+	return c.inters.Membership
+}
+
+func (c *MembershipClient) mutate(ctx context.Context, m *MembershipMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MembershipCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MembershipUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MembershipUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MembershipDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Membership mutation op: %q", m.Op())
 	}
 }
 
@@ -475,15 +650,15 @@ func (c *UserClient) GetX(ctx context.Context, id uuid.UUID) *User {
 	return obj
 }
 
-// QueryWorkspaces queries the workspaces edge of a User.
-func (c *UserClient) QueryWorkspaces(_m *User) *WorkspaceQuery {
-	query := (&WorkspaceClient{config: c.config}).Query()
+// QueryMemberships queries the memberships edge of a User.
+func (c *UserClient) QueryMemberships(_m *User) *MembershipQuery {
+	query := (&MembershipClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(workspace.Table, workspace.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.WorkspacesTable, user.WorkspacesColumn),
+			sqlgraph.To(membership.Table, membership.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MembershipsTable, user.MembershipsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -624,15 +799,15 @@ func (c *WorkspaceClient) GetX(ctx context.Context, id uuid.UUID) *Workspace {
 	return obj
 }
 
-// QueryOwner queries the owner edge of a Workspace.
-func (c *WorkspaceClient) QueryOwner(_m *Workspace) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
+// QueryMemberships queries the memberships edge of a Workspace.
+func (c *WorkspaceClient) QueryMemberships(_m *Workspace) *MembershipQuery {
+	query := (&MembershipClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(workspace.Table, workspace.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, workspace.OwnerTable, workspace.OwnerColumn),
+			sqlgraph.To(membership.Table, membership.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workspace.MembershipsTable, workspace.MembershipsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -684,9 +859,9 @@ func (c *WorkspaceClient) mutate(ctx context.Context, m *WorkspaceMutation) (Val
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Project, User, Workspace []ent.Hook
+		Membership, Project, User, Workspace []ent.Hook
 	}
 	inters struct {
-		Project, User, Workspace []ent.Interceptor
+		Membership, Project, User, Workspace []ent.Interceptor
 	}
 )

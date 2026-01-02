@@ -91,11 +91,6 @@ func UpdatedAt(v time.Time) predicate.Workspace {
 	return predicate.Workspace(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
-// OwnerID applies equality check predicate on the "owner_id" field. It's identical to OwnerIDEQ.
-func OwnerID(v uuid.UUID) predicate.Workspace {
-	return predicate.Workspace(sql.FieldEQ(FieldOwnerID, v))
-}
-
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.Workspace {
 	return predicate.Workspace(sql.FieldEQ(FieldName, v))
@@ -521,41 +516,21 @@ func UpdatedAtLTE(v time.Time) predicate.Workspace {
 	return predicate.Workspace(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
-// OwnerIDEQ applies the EQ predicate on the "owner_id" field.
-func OwnerIDEQ(v uuid.UUID) predicate.Workspace {
-	return predicate.Workspace(sql.FieldEQ(FieldOwnerID, v))
-}
-
-// OwnerIDNEQ applies the NEQ predicate on the "owner_id" field.
-func OwnerIDNEQ(v uuid.UUID) predicate.Workspace {
-	return predicate.Workspace(sql.FieldNEQ(FieldOwnerID, v))
-}
-
-// OwnerIDIn applies the In predicate on the "owner_id" field.
-func OwnerIDIn(vs ...uuid.UUID) predicate.Workspace {
-	return predicate.Workspace(sql.FieldIn(FieldOwnerID, vs...))
-}
-
-// OwnerIDNotIn applies the NotIn predicate on the "owner_id" field.
-func OwnerIDNotIn(vs ...uuid.UUID) predicate.Workspace {
-	return predicate.Workspace(sql.FieldNotIn(FieldOwnerID, vs...))
-}
-
-// HasOwner applies the HasEdge predicate on the "owner" edge.
-func HasOwner() predicate.Workspace {
+// HasMemberships applies the HasEdge predicate on the "memberships" edge.
+func HasMemberships() predicate.Workspace {
 	return predicate.Workspace(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, OwnerTable, OwnerColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, MembershipsTable, MembershipsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasOwnerWith applies the HasEdge predicate on the "owner" edge with a given conditions (other predicates).
-func HasOwnerWith(preds ...predicate.User) predicate.Workspace {
+// HasMembershipsWith applies the HasEdge predicate on the "memberships" edge with a given conditions (other predicates).
+func HasMembershipsWith(preds ...predicate.Membership) predicate.Workspace {
 	return predicate.Workspace(func(s *sql.Selector) {
-		step := newOwnerStep()
+		step := newMembershipsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

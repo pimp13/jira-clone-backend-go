@@ -481,21 +481,21 @@ func UpdatedAtLTE(v time.Time) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
-// HasWorkspaces applies the HasEdge predicate on the "workspaces" edge.
-func HasWorkspaces() predicate.User {
+// HasMemberships applies the HasEdge predicate on the "memberships" edge.
+func HasMemberships() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, WorkspacesTable, WorkspacesColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, MembershipsTable, MembershipsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasWorkspacesWith applies the HasEdge predicate on the "workspaces" edge with a given conditions (other predicates).
-func HasWorkspacesWith(preds ...predicate.Workspace) predicate.User {
+// HasMembershipsWith applies the HasEdge predicate on the "memberships" edge with a given conditions (other predicates).
+func HasMembershipsWith(preds ...predicate.Membership) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
-		step := newWorkspacesStep()
+		step := newMembershipsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

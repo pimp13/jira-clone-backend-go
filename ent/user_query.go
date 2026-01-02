@@ -13,19 +13,19 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/pimp13/jira-clone-backend-go/ent/membership"
 	"github.com/pimp13/jira-clone-backend-go/ent/predicate"
 	"github.com/pimp13/jira-clone-backend-go/ent/user"
-	"github.com/pimp13/jira-clone-backend-go/ent/workspace"
 )
 
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx            *QueryContext
-	order          []user.OrderOption
-	inters         []Interceptor
-	predicates     []predicate.User
-	withWorkspaces *WorkspaceQuery
+	ctx             *QueryContext
+	order           []user.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.User
+	withMemberships *MembershipQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,9 +62,9 @@ func (_q *UserQuery) Order(o ...user.OrderOption) *UserQuery {
 	return _q
 }
 
-// QueryWorkspaces chains the current query on the "workspaces" edge.
-func (_q *UserQuery) QueryWorkspaces() *WorkspaceQuery {
-	query := (&WorkspaceClient{config: _q.config}).Query()
+// QueryMemberships chains the current query on the "memberships" edge.
+func (_q *UserQuery) QueryMemberships() *MembershipQuery {
+	query := (&MembershipClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -75,8 +75,8 @@ func (_q *UserQuery) QueryWorkspaces() *WorkspaceQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(workspace.Table, workspace.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.WorkspacesTable, user.WorkspacesColumn),
+			sqlgraph.To(membership.Table, membership.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MembershipsTable, user.MembershipsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -271,26 +271,26 @@ func (_q *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:         _q.config,
-		ctx:            _q.ctx.Clone(),
-		order:          append([]user.OrderOption{}, _q.order...),
-		inters:         append([]Interceptor{}, _q.inters...),
-		predicates:     append([]predicate.User{}, _q.predicates...),
-		withWorkspaces: _q.withWorkspaces.Clone(),
+		config:          _q.config,
+		ctx:             _q.ctx.Clone(),
+		order:           append([]user.OrderOption{}, _q.order...),
+		inters:          append([]Interceptor{}, _q.inters...),
+		predicates:      append([]predicate.User{}, _q.predicates...),
+		withMemberships: _q.withMemberships.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
-// WithWorkspaces tells the query-builder to eager-load the nodes that are connected to
-// the "workspaces" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *UserQuery) WithWorkspaces(opts ...func(*WorkspaceQuery)) *UserQuery {
-	query := (&WorkspaceClient{config: _q.config}).Query()
+// WithMemberships tells the query-builder to eager-load the nodes that are connected to
+// the "memberships" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithMemberships(opts ...func(*MembershipQuery)) *UserQuery {
+	query := (&MembershipClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withWorkspaces = query
+	_q.withMemberships = query
 	return _q
 }
 
@@ -373,7 +373,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			_q.withWorkspaces != nil,
+			_q.withMemberships != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -394,17 +394,17 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withWorkspaces; query != nil {
-		if err := _q.loadWorkspaces(ctx, query, nodes,
-			func(n *User) { n.Edges.Workspaces = []*Workspace{} },
-			func(n *User, e *Workspace) { n.Edges.Workspaces = append(n.Edges.Workspaces, e) }); err != nil {
+	if query := _q.withMemberships; query != nil {
+		if err := _q.loadMemberships(ctx, query, nodes,
+			func(n *User) { n.Edges.Memberships = []*Membership{} },
+			func(n *User, e *Membership) { n.Edges.Memberships = append(n.Edges.Memberships, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *UserQuery) loadWorkspaces(ctx context.Context, query *WorkspaceQuery, nodes []*User, init func(*User), assign func(*User, *Workspace)) error {
+func (_q *UserQuery) loadMemberships(ctx context.Context, query *MembershipQuery, nodes []*User, init func(*User), assign func(*User, *Membership)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[uuid.UUID]*User)
 	for i := range nodes {
@@ -415,20 +415,20 @@ func (_q *UserQuery) loadWorkspaces(ctx context.Context, query *WorkspaceQuery, 
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(workspace.FieldOwnerID)
+		query.ctx.AppendFieldOnce(membership.FieldUserID)
 	}
-	query.Where(predicate.Workspace(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(user.WorkspacesColumn), fks...))
+	query.Where(predicate.Membership(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.MembershipsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.OwnerID
+		fk := n.UserID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "owner_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
