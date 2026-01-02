@@ -19,20 +19,20 @@ import (
 type WorkspaceService interface {
 	Index(
 		ctx context.Context,
-		userId uuid.UUID,
+		userID uuid.UUID,
 	) *res.Response[[]*dto.WorkspaceResponse]
 
 	ShowById(
 		ctx context.Context,
 		workspaceId uuid.UUID,
-		userId uuid.UUID,
+		userID uuid.UUID,
 	) *res.Response[*dto.WorkspaceResponse]
 
 	Create(
 		ctx context.Context,
 		bodyData dto.CreateWorkspaceDto,
 		file *multipart.FileHeader,
-		userId uuid.UUID,
+		userID uuid.UUID,
 	) *res.Response[*dto.CreateWorkspaceResponse]
 }
 
@@ -50,10 +50,10 @@ func NewWorkspaceService(client *ent.Client) WorkspaceService {
 
 func (s *workspaceService) Index(
 	ctx context.Context,
-	userId uuid.UUID,
+	userID uuid.UUID,
 ) *res.Response[[]*dto.WorkspaceResponse] {
 	initData, err := s.client.Workspace.Query().
-		Where(entWorkspace.OwnerIDEQ(userId)).
+		Where(entWorkspace.OwnerIDEQ(userID)).
 		WithOwner().
 		Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
 		All(ctx)
@@ -79,7 +79,7 @@ func (s *workspaceService) Index(
 func (s *workspaceService) ShowById(
 	ctx context.Context,
 	workspaceId uuid.UUID,
-	userId uuid.UUID,
+	userID uuid.UUID,
 ) *res.Response[*dto.WorkspaceResponse] {
 	initData, err := s.client.Workspace.Query().
 		Where(entWorkspace.IDEQ(workspaceId)).
@@ -105,15 +105,15 @@ func (s *workspaceService) Create(
 	ctx context.Context,
 	bodyData dto.CreateWorkspaceDto,
 	file *multipart.FileHeader,
-	userId uuid.UUID,
+	userID uuid.UUID,
 ) *res.Response[*dto.CreateWorkspaceResponse] {
 	var slug string
 	var err error
 
 	if bodyData.Slug != nil {
-		slug, err = s.generateUniqueSlug(ctx, *bodyData.Slug)
+		slug, err = s.generateUniqueSlug(ctx, *bodyData.Slug, uuid.Nil)
 	} else {
-		slug, err = s.generateUniqueSlug(ctx, bodyData.Name)
+		slug, err = s.generateUniqueSlug(ctx, bodyData.Name, uuid.Nil)
 	}
 	if err != nil {
 		return res.ErrorMessage[*dto.CreateWorkspaceResponse]("failed to generate slug")
@@ -135,7 +135,7 @@ func (s *workspaceService) Create(
 	builder := s.client.Workspace.Create().
 		SetName(bodyData.Name).
 		SetSlug(slug).
-		SetOwnerID(userId).
+		SetOwnerID(userID).
 		SetInviteCode(util.GenerateInviteCode(0)).
 		SetNillableImageURL(imageURL)
 
@@ -156,13 +156,78 @@ func (s *workspaceService) Create(
 	)
 }
 
-func (s *workspaceService) generateUniqueSlug(ctx context.Context, title string) (string, error) {
+func (s *workspaceService) Update(
+	ctx context.Context,
+	bodyData dto.UpdateWorkspaceDto,
+	workspaceID uuid.UUID,
+	file *multipart.FileHeader,
+	userID uuid.UUID,
+) *res.Response[*dto.UpdateWorkspaceResponse] {
+	var slug string
+	var err error
+
+	if bodyData.Slug != nil {
+		slug, err = s.generateUniqueSlug(ctx, *bodyData.Slug, workspaceID)
+	} else if bodyData.Name != nil {
+		slug, err = s.generateUniqueSlug(ctx, *bodyData.Name, workspaceID)
+	}
+	if err != nil {
+		return res.ErrorResponse[*dto.UpdateWorkspaceResponse]("failed to generate slug", err)
+	}
+
+	var imageURL *string = nil
+	var filePath *string = nil
+	if file != nil {
+		uploadResult, err := s.fileUploadService.UploadImage(ctx, file)
+		if err != nil {
+			return res.ErrorResponse[*dto.UpdateWorkspaceResponse]("failed to upload file", err)
+		}
+		imageURL = &uploadResult.URL
+		filePath = &uploadResult.FilePath
+	}
+
+	builder := s.client.Workspace.
+		UpdateOneID(workspaceID).
+		SetNillableName(bodyData.Name).
+		SetSlug(slug).
+		SetNillableImageURL(imageURL)
+
+	updatedWrokspace, err := builder.Save(ctx)
+	if err != nil {
+		if file != nil && filePath != nil {
+			_ = s.fileUploadService.DeleteImage(ctx, *filePath)
+		}
+		return res.ErrorResponse[*dto.UpdateWorkspaceResponse]("failed to update workspace", err)
+	}
+
+	return res.SuccessResponse(
+		&dto.UpdateWorkspaceResponse{
+			ID: updatedWrokspace.ID,
+		},
+		"workspace is updated successfully!",
+	)
+}
+
+func (s *workspaceService) generateUniqueSlug(
+	ctx context.Context,
+	title string,
+	excludeID uuid.UUID,
+) (string, error) {
 	baseSlug := util.Slugify(title)
 	slug := baseSlug
 	count := 1
 
-	for true {
-		exists, err := s.client.Workspace.Query().Where(entWorkspace.SlugEQ(slug)).Exist(ctx)
+	for {
+		q := s.client.
+			Workspace.
+			Query().
+			Where(entWorkspace.SlugEQ(slug))
+
+		if excludeID != uuid.Nil {
+			q = q.Where(entWorkspace.IDNEQ(excludeID))
+		}
+
+		exists, err := q.Exist(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
 				break
