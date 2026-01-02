@@ -66,6 +66,11 @@ func ImageURL(v string) predicate.Project {
 	return predicate.Project(sql.FieldEQ(FieldImageURL, v))
 }
 
+// ImagePath applies equality check predicate on the "image_path" field. It's identical to ImagePathEQ.
+func ImagePath(v string) predicate.Project {
+	return predicate.Project(sql.FieldEQ(FieldImagePath, v))
+}
+
 // IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
 func IsActive(v bool) predicate.Project {
 	return predicate.Project(sql.FieldEQ(FieldIsActive, v))
@@ -229,6 +234,81 @@ func ImageURLEqualFold(v string) predicate.Project {
 // ImageURLContainsFold applies the ContainsFold predicate on the "image_url" field.
 func ImageURLContainsFold(v string) predicate.Project {
 	return predicate.Project(sql.FieldContainsFold(FieldImageURL, v))
+}
+
+// ImagePathEQ applies the EQ predicate on the "image_path" field.
+func ImagePathEQ(v string) predicate.Project {
+	return predicate.Project(sql.FieldEQ(FieldImagePath, v))
+}
+
+// ImagePathNEQ applies the NEQ predicate on the "image_path" field.
+func ImagePathNEQ(v string) predicate.Project {
+	return predicate.Project(sql.FieldNEQ(FieldImagePath, v))
+}
+
+// ImagePathIn applies the In predicate on the "image_path" field.
+func ImagePathIn(vs ...string) predicate.Project {
+	return predicate.Project(sql.FieldIn(FieldImagePath, vs...))
+}
+
+// ImagePathNotIn applies the NotIn predicate on the "image_path" field.
+func ImagePathNotIn(vs ...string) predicate.Project {
+	return predicate.Project(sql.FieldNotIn(FieldImagePath, vs...))
+}
+
+// ImagePathGT applies the GT predicate on the "image_path" field.
+func ImagePathGT(v string) predicate.Project {
+	return predicate.Project(sql.FieldGT(FieldImagePath, v))
+}
+
+// ImagePathGTE applies the GTE predicate on the "image_path" field.
+func ImagePathGTE(v string) predicate.Project {
+	return predicate.Project(sql.FieldGTE(FieldImagePath, v))
+}
+
+// ImagePathLT applies the LT predicate on the "image_path" field.
+func ImagePathLT(v string) predicate.Project {
+	return predicate.Project(sql.FieldLT(FieldImagePath, v))
+}
+
+// ImagePathLTE applies the LTE predicate on the "image_path" field.
+func ImagePathLTE(v string) predicate.Project {
+	return predicate.Project(sql.FieldLTE(FieldImagePath, v))
+}
+
+// ImagePathContains applies the Contains predicate on the "image_path" field.
+func ImagePathContains(v string) predicate.Project {
+	return predicate.Project(sql.FieldContains(FieldImagePath, v))
+}
+
+// ImagePathHasPrefix applies the HasPrefix predicate on the "image_path" field.
+func ImagePathHasPrefix(v string) predicate.Project {
+	return predicate.Project(sql.FieldHasPrefix(FieldImagePath, v))
+}
+
+// ImagePathHasSuffix applies the HasSuffix predicate on the "image_path" field.
+func ImagePathHasSuffix(v string) predicate.Project {
+	return predicate.Project(sql.FieldHasSuffix(FieldImagePath, v))
+}
+
+// ImagePathIsNil applies the IsNil predicate on the "image_path" field.
+func ImagePathIsNil() predicate.Project {
+	return predicate.Project(sql.FieldIsNull(FieldImagePath))
+}
+
+// ImagePathNotNil applies the NotNil predicate on the "image_path" field.
+func ImagePathNotNil() predicate.Project {
+	return predicate.Project(sql.FieldNotNull(FieldImagePath))
+}
+
+// ImagePathEqualFold applies the EqualFold predicate on the "image_path" field.
+func ImagePathEqualFold(v string) predicate.Project {
+	return predicate.Project(sql.FieldEqualFold(FieldImagePath, v))
+}
+
+// ImagePathContainsFold applies the ContainsFold predicate on the "image_path" field.
+func ImagePathContainsFold(v string) predicate.Project {
+	return predicate.Project(sql.FieldContainsFold(FieldImagePath, v))
 }
 
 // IsActiveEQ applies the EQ predicate on the "is_active" field.

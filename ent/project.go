@@ -23,6 +23,8 @@ type Project struct {
 	Name string `json:"name,omitempty"`
 	// ImageURL holds the value of the "image_url" field.
 	ImageURL *string `json:"image_url,omitempty"`
+	// ImagePath holds the value of the "image_path" field.
+	ImagePath *string `json:"image_path,omitempty"`
 	// IsActive holds the value of the "is_active" field.
 	IsActive bool `json:"is_active,omitempty"`
 	// Description holds the value of the "description" field.
@@ -66,7 +68,7 @@ func (*Project) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case project.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case project.FieldName, project.FieldImageURL, project.FieldDescription:
+		case project.FieldName, project.FieldImageURL, project.FieldImagePath, project.FieldDescription:
 			values[i] = new(sql.NullString)
 		case project.FieldCreatedAt, project.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -105,6 +107,13 @@ func (_m *Project) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ImageURL = new(string)
 				*_m.ImageURL = value.String
+			}
+		case project.FieldImagePath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field image_path", values[i])
+			} else if value.Valid {
+				_m.ImagePath = new(string)
+				*_m.ImagePath = value.String
 			}
 		case project.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -183,6 +192,11 @@ func (_m *Project) String() string {
 	builder.WriteString(", ")
 	if v := _m.ImageURL; v != nil {
 		builder.WriteString("image_url=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.ImagePath; v != nil {
+		builder.WriteString("image_path=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")

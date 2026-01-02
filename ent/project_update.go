@@ -64,6 +64,26 @@ func (_u *ProjectUpdate) ClearImageURL() *ProjectUpdate {
 	return _u
 }
 
+// SetImagePath sets the "image_path" field.
+func (_u *ProjectUpdate) SetImagePath(v string) *ProjectUpdate {
+	_u.mutation.SetImagePath(v)
+	return _u
+}
+
+// SetNillableImagePath sets the "image_path" field if the given value is not nil.
+func (_u *ProjectUpdate) SetNillableImagePath(v *string) *ProjectUpdate {
+	if v != nil {
+		_u.SetImagePath(*v)
+	}
+	return _u
+}
+
+// ClearImagePath clears the value of the "image_path" field.
+func (_u *ProjectUpdate) ClearImagePath() *ProjectUpdate {
+	_u.mutation.ClearImagePath()
+	return _u
+}
+
 // SetIsActive sets the "is_active" field.
 func (_u *ProjectUpdate) SetIsActive(v bool) *ProjectUpdate {
 	_u.mutation.SetIsActive(v)
@@ -204,6 +224,12 @@ func (_u *ProjectUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.ImageURLCleared() {
 		_spec.ClearField(project.FieldImageURL, field.TypeString)
 	}
+	if value, ok := _u.mutation.ImagePath(); ok {
+		_spec.SetField(project.FieldImagePath, field.TypeString, value)
+	}
+	if _u.mutation.ImagePathCleared() {
+		_spec.ClearField(project.FieldImagePath, field.TypeString)
+	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(project.FieldIsActive, field.TypeBool, value)
 	}
@@ -296,6 +322,26 @@ func (_u *ProjectUpdateOne) SetNillableImageURL(v *string) *ProjectUpdateOne {
 // ClearImageURL clears the value of the "image_url" field.
 func (_u *ProjectUpdateOne) ClearImageURL() *ProjectUpdateOne {
 	_u.mutation.ClearImageURL()
+	return _u
+}
+
+// SetImagePath sets the "image_path" field.
+func (_u *ProjectUpdateOne) SetImagePath(v string) *ProjectUpdateOne {
+	_u.mutation.SetImagePath(v)
+	return _u
+}
+
+// SetNillableImagePath sets the "image_path" field if the given value is not nil.
+func (_u *ProjectUpdateOne) SetNillableImagePath(v *string) *ProjectUpdateOne {
+	if v != nil {
+		_u.SetImagePath(*v)
+	}
+	return _u
+}
+
+// ClearImagePath clears the value of the "image_path" field.
+func (_u *ProjectUpdateOne) ClearImagePath() *ProjectUpdateOne {
+	_u.mutation.ClearImagePath()
 	return _u
 }
 
@@ -468,6 +514,12 @@ func (_u *ProjectUpdateOne) sqlSave(ctx context.Context) (_node *Project, err er
 	}
 	if _u.mutation.ImageURLCleared() {
 		_spec.ClearField(project.FieldImageURL, field.TypeString)
+	}
+	if value, ok := _u.mutation.ImagePath(); ok {
+		_spec.SetField(project.FieldImagePath, field.TypeString, value)
+	}
+	if _u.mutation.ImagePathCleared() {
+		_spec.ClearField(project.FieldImagePath, field.TypeString)
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(project.FieldIsActive, field.TypeBool, value)

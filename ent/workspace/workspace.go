@@ -21,6 +21,8 @@ const (
 	FieldSlug = "slug"
 	// FieldImageURL holds the string denoting the image_url field in the database.
 	FieldImageURL = "image_url"
+	// FieldImagePath holds the string denoting the image_path field in the database.
+	FieldImagePath = "image_path"
 	// FieldInviteCode holds the string denoting the invite_code field in the database.
 	FieldInviteCode = "invite_code"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -57,6 +59,7 @@ var Columns = []string{
 	FieldName,
 	FieldSlug,
 	FieldImageURL,
+	FieldImagePath,
 	FieldInviteCode,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -111,6 +114,11 @@ func BySlug(opts ...sql.OrderTermOption) OrderOption {
 // ByImageURL orders the results by the image_url field.
 func ByImageURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldImageURL, opts...).ToFunc()
+}
+
+// ByImagePath orders the results by the image_path field.
+func ByImagePath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldImagePath, opts...).ToFunc()
 }
 
 // ByInviteCode orders the results by the invite_code field.

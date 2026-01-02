@@ -42,6 +42,20 @@ func (_c *ProjectCreate) SetNillableImageURL(v *string) *ProjectCreate {
 	return _c
 }
 
+// SetImagePath sets the "image_path" field.
+func (_c *ProjectCreate) SetImagePath(v string) *ProjectCreate {
+	_c.mutation.SetImagePath(v)
+	return _c
+}
+
+// SetNillableImagePath sets the "image_path" field if the given value is not nil.
+func (_c *ProjectCreate) SetNillableImagePath(v *string) *ProjectCreate {
+	if v != nil {
+		_c.SetImagePath(*v)
+	}
+	return _c
+}
+
 // SetIsActive sets the "is_active" field.
 func (_c *ProjectCreate) SetIsActive(v bool) *ProjectCreate {
 	_c.mutation.SetIsActive(v)
@@ -243,6 +257,10 @@ func (_c *ProjectCreate) createSpec() (*Project, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ImageURL(); ok {
 		_spec.SetField(project.FieldImageURL, field.TypeString, value)
 		_node.ImageURL = &value
+	}
+	if value, ok := _c.mutation.ImagePath(); ok {
+		_spec.SetField(project.FieldImagePath, field.TypeString, value)
+		_node.ImagePath = &value
 	}
 	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(project.FieldIsActive, field.TypeBool, value)

@@ -22,6 +22,7 @@ func (Project) Fields() []ent.Field {
 
 		field.String("name").NotEmpty().MinLen(3).MaxLen(195),
 		field.String("image_url").Optional().Nillable(),
+		field.String("image_path").Optional().Nillable(),
 		field.Bool("is_active").Default(true),
 		field.String("description").Optional().Nillable(),
 		field.Time("created_at").Default(time.Now).Immutable(),

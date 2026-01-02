@@ -79,6 +79,26 @@ func (_u *WorkspaceUpdate) ClearImageURL() *WorkspaceUpdate {
 	return _u
 }
 
+// SetImagePath sets the "image_path" field.
+func (_u *WorkspaceUpdate) SetImagePath(v string) *WorkspaceUpdate {
+	_u.mutation.SetImagePath(v)
+	return _u
+}
+
+// SetNillableImagePath sets the "image_path" field if the given value is not nil.
+func (_u *WorkspaceUpdate) SetNillableImagePath(v *string) *WorkspaceUpdate {
+	if v != nil {
+		_u.SetImagePath(*v)
+	}
+	return _u
+}
+
+// ClearImagePath clears the value of the "image_path" field.
+func (_u *WorkspaceUpdate) ClearImagePath() *WorkspaceUpdate {
+	_u.mutation.ClearImagePath()
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *WorkspaceUpdate) SetUpdatedAt(v time.Time) *WorkspaceUpdate {
 	_u.mutation.SetUpdatedAt(v)
@@ -229,6 +249,12 @@ func (_u *WorkspaceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.ImageURLCleared() {
 		_spec.ClearField(workspace.FieldImageURL, field.TypeString)
 	}
+	if value, ok := _u.mutation.ImagePath(); ok {
+		_spec.SetField(workspace.FieldImagePath, field.TypeString, value)
+	}
+	if _u.mutation.ImagePathCleared() {
+		_spec.ClearField(workspace.FieldImagePath, field.TypeString)
+	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(workspace.FieldUpdatedAt, field.TypeTime, value)
 	}
@@ -371,6 +397,26 @@ func (_u *WorkspaceUpdateOne) SetNillableImageURL(v *string) *WorkspaceUpdateOne
 // ClearImageURL clears the value of the "image_url" field.
 func (_u *WorkspaceUpdateOne) ClearImageURL() *WorkspaceUpdateOne {
 	_u.mutation.ClearImageURL()
+	return _u
+}
+
+// SetImagePath sets the "image_path" field.
+func (_u *WorkspaceUpdateOne) SetImagePath(v string) *WorkspaceUpdateOne {
+	_u.mutation.SetImagePath(v)
+	return _u
+}
+
+// SetNillableImagePath sets the "image_path" field if the given value is not nil.
+func (_u *WorkspaceUpdateOne) SetNillableImagePath(v *string) *WorkspaceUpdateOne {
+	if v != nil {
+		_u.SetImagePath(*v)
+	}
+	return _u
+}
+
+// ClearImagePath clears the value of the "image_path" field.
+func (_u *WorkspaceUpdateOne) ClearImagePath() *WorkspaceUpdateOne {
+	_u.mutation.ClearImagePath()
 	return _u
 }
 
@@ -553,6 +599,12 @@ func (_u *WorkspaceUpdateOne) sqlSave(ctx context.Context) (_node *Workspace, er
 	}
 	if _u.mutation.ImageURLCleared() {
 		_spec.ClearField(workspace.FieldImageURL, field.TypeString)
+	}
+	if value, ok := _u.mutation.ImagePath(); ok {
+		_spec.SetField(workspace.FieldImagePath, field.TypeString, value)
+	}
+	if _u.mutation.ImagePathCleared() {
+		_spec.ClearField(workspace.FieldImagePath, field.TypeString)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(workspace.FieldUpdatedAt, field.TypeTime, value)

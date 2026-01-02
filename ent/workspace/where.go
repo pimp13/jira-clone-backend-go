@@ -71,6 +71,11 @@ func ImageURL(v string) predicate.Workspace {
 	return predicate.Workspace(sql.FieldEQ(FieldImageURL, v))
 }
 
+// ImagePath applies equality check predicate on the "image_path" field. It's identical to ImagePathEQ.
+func ImagePath(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldEQ(FieldImagePath, v))
+}
+
 // InviteCode applies equality check predicate on the "invite_code" field. It's identical to InviteCodeEQ.
 func InviteCode(v string) predicate.Workspace {
 	return predicate.Workspace(sql.FieldEQ(FieldInviteCode, v))
@@ -294,6 +299,81 @@ func ImageURLEqualFold(v string) predicate.Workspace {
 // ImageURLContainsFold applies the ContainsFold predicate on the "image_url" field.
 func ImageURLContainsFold(v string) predicate.Workspace {
 	return predicate.Workspace(sql.FieldContainsFold(FieldImageURL, v))
+}
+
+// ImagePathEQ applies the EQ predicate on the "image_path" field.
+func ImagePathEQ(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldEQ(FieldImagePath, v))
+}
+
+// ImagePathNEQ applies the NEQ predicate on the "image_path" field.
+func ImagePathNEQ(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldNEQ(FieldImagePath, v))
+}
+
+// ImagePathIn applies the In predicate on the "image_path" field.
+func ImagePathIn(vs ...string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldIn(FieldImagePath, vs...))
+}
+
+// ImagePathNotIn applies the NotIn predicate on the "image_path" field.
+func ImagePathNotIn(vs ...string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldNotIn(FieldImagePath, vs...))
+}
+
+// ImagePathGT applies the GT predicate on the "image_path" field.
+func ImagePathGT(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldGT(FieldImagePath, v))
+}
+
+// ImagePathGTE applies the GTE predicate on the "image_path" field.
+func ImagePathGTE(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldGTE(FieldImagePath, v))
+}
+
+// ImagePathLT applies the LT predicate on the "image_path" field.
+func ImagePathLT(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldLT(FieldImagePath, v))
+}
+
+// ImagePathLTE applies the LTE predicate on the "image_path" field.
+func ImagePathLTE(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldLTE(FieldImagePath, v))
+}
+
+// ImagePathContains applies the Contains predicate on the "image_path" field.
+func ImagePathContains(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldContains(FieldImagePath, v))
+}
+
+// ImagePathHasPrefix applies the HasPrefix predicate on the "image_path" field.
+func ImagePathHasPrefix(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldHasPrefix(FieldImagePath, v))
+}
+
+// ImagePathHasSuffix applies the HasSuffix predicate on the "image_path" field.
+func ImagePathHasSuffix(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldHasSuffix(FieldImagePath, v))
+}
+
+// ImagePathIsNil applies the IsNil predicate on the "image_path" field.
+func ImagePathIsNil() predicate.Workspace {
+	return predicate.Workspace(sql.FieldIsNull(FieldImagePath))
+}
+
+// ImagePathNotNil applies the NotNil predicate on the "image_path" field.
+func ImagePathNotNil() predicate.Workspace {
+	return predicate.Workspace(sql.FieldNotNull(FieldImagePath))
+}
+
+// ImagePathEqualFold applies the EqualFold predicate on the "image_path" field.
+func ImagePathEqualFold(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldEqualFold(FieldImagePath, v))
+}
+
+// ImagePathContainsFold applies the ContainsFold predicate on the "image_path" field.
+func ImagePathContainsFold(v string) predicate.Workspace {
+	return predicate.Workspace(sql.FieldContainsFold(FieldImagePath, v))
 }
 
 // InviteCodeEQ applies the EQ predicate on the "invite_code" field.

@@ -25,6 +25,8 @@ type Workspace struct {
 	Slug string `json:"slug,omitempty"`
 	// ImageURL holds the value of the "image_url" field.
 	ImageURL *string `json:"image_url,omitempty"`
+	// ImagePath holds the value of the "image_path" field.
+	ImagePath *string `json:"image_path,omitempty"`
 	// InviteCode holds the value of the "invite_code" field.
 	InviteCode string `json:"invite_code,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -75,7 +77,7 @@ func (*Workspace) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case workspace.FieldName, workspace.FieldSlug, workspace.FieldImageURL, workspace.FieldInviteCode:
+		case workspace.FieldName, workspace.FieldSlug, workspace.FieldImageURL, workspace.FieldImagePath, workspace.FieldInviteCode:
 			values[i] = new(sql.NullString)
 		case workspace.FieldCreatedAt, workspace.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -120,6 +122,13 @@ func (_m *Workspace) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ImageURL = new(string)
 				*_m.ImageURL = value.String
+			}
+		case workspace.FieldImagePath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field image_path", values[i])
+			} else if value.Valid {
+				_m.ImagePath = new(string)
+				*_m.ImagePath = value.String
 			}
 		case workspace.FieldInviteCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -199,6 +208,11 @@ func (_m *Workspace) String() string {
 	builder.WriteString(", ")
 	if v := _m.ImageURL; v != nil {
 		builder.WriteString("image_url=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.ImagePath; v != nil {
+		builder.WriteString("image_path=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")

@@ -38,15 +38,15 @@ func init() {
 		}
 	}()
 	// projectDescIsActive is the schema descriptor for is_active field.
-	projectDescIsActive := projectFields[3].Descriptor()
+	projectDescIsActive := projectFields[4].Descriptor()
 	// project.DefaultIsActive holds the default value on creation for the is_active field.
 	project.DefaultIsActive = projectDescIsActive.Default.(bool)
 	// projectDescCreatedAt is the schema descriptor for created_at field.
-	projectDescCreatedAt := projectFields[5].Descriptor()
+	projectDescCreatedAt := projectFields[6].Descriptor()
 	// project.DefaultCreatedAt holds the default value on creation for the created_at field.
 	project.DefaultCreatedAt = projectDescCreatedAt.Default.(func() time.Time)
 	// projectDescUpdatedAt is the schema descriptor for updated_at field.
-	projectDescUpdatedAt := projectFields[6].Descriptor()
+	projectDescUpdatedAt := projectFields[7].Descriptor()
 	// project.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	project.DefaultUpdatedAt = projectDescUpdatedAt.Default.(func() time.Time)
 	// project.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -143,7 +143,7 @@ func init() {
 		}
 	}()
 	// workspaceDescInviteCode is the schema descriptor for invite_code field.
-	workspaceDescInviteCode := workspaceFields[4].Descriptor()
+	workspaceDescInviteCode := workspaceFields[5].Descriptor()
 	// workspace.InviteCodeValidator is a validator for the "invite_code" field. It is called by the builders before save.
 	workspace.InviteCodeValidator = func() func(string) error {
 		validators := workspaceDescInviteCode.Validators
@@ -162,11 +162,11 @@ func init() {
 		}
 	}()
 	// workspaceDescCreatedAt is the schema descriptor for created_at field.
-	workspaceDescCreatedAt := workspaceFields[5].Descriptor()
+	workspaceDescCreatedAt := workspaceFields[6].Descriptor()
 	// workspace.DefaultCreatedAt holds the default value on creation for the created_at field.
 	workspace.DefaultCreatedAt = workspaceDescCreatedAt.Default.(func() time.Time)
 	// workspaceDescUpdatedAt is the schema descriptor for updated_at field.
-	workspaceDescUpdatedAt := workspaceFields[6].Descriptor()
+	workspaceDescUpdatedAt := workspaceFields[7].Descriptor()
 	// workspace.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	workspace.DefaultUpdatedAt = workspaceDescUpdatedAt.Default.(func() time.Time)
 	// workspace.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

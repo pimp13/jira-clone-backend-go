@@ -34,6 +34,14 @@ type WorkspaceService interface {
 		file *multipart.FileHeader,
 		userID uuid.UUID,
 	) *res.Response[*dto.CreateWorkspaceResponse]
+
+	Update(
+		ctx context.Context,
+		bodyData dto.UpdateWorkspaceDto,
+		workspaceID uuid.UUID,
+		file *multipart.FileHeader,
+		userID uuid.UUID,
+	) *res.Response[*dto.UpdateWorkspaceResponse]
 }
 
 type workspaceService struct {
@@ -137,7 +145,8 @@ func (s *workspaceService) Create(
 		SetSlug(slug).
 		SetOwnerID(userID).
 		SetInviteCode(util.GenerateInviteCode(0)).
-		SetNillableImageURL(imageURL)
+		SetNillableImageURL(imageURL).
+		SetNillableImagePath(filePath)
 
 	newWorkspace, err := builder.Save(ctx)
 	if err != nil {
@@ -163,9 +172,24 @@ func (s *workspaceService) Update(
 	file *multipart.FileHeader,
 	userID uuid.UUID,
 ) *res.Response[*dto.UpdateWorkspaceResponse] {
-	var slug string
 	var err error
 
+	workspace, err := s.client.Workspace.
+		Query().
+		Where(entWorkspace.IDEQ(workspaceID)).
+		Select(
+			entWorkspace.FieldID,
+			entWorkspace.FieldImageURL,
+			entWorkspace.FieldImagePath,
+		).First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return res.ErrorMessage[*dto.UpdateWorkspaceResponse]("workspace is not found")
+		}
+		return res.ErrorResponse[*dto.UpdateWorkspaceResponse]("failed to get workspace", err)
+	}
+
+	var slug string
 	if bodyData.Slug != nil {
 		slug, err = s.generateUniqueSlug(ctx, *bodyData.Slug, workspaceID)
 	} else if bodyData.Name != nil {
@@ -177,6 +201,7 @@ func (s *workspaceService) Update(
 
 	var imageURL *string = nil
 	var filePath *string = nil
+	var shouldDeleteOldImage bool
 	if file != nil {
 		uploadResult, err := s.fileUploadService.UploadImage(ctx, file)
 		if err != nil {
@@ -184,15 +209,20 @@ func (s *workspaceService) Update(
 		}
 		imageURL = &uploadResult.URL
 		filePath = &uploadResult.FilePath
+		shouldDeleteOldImage = true
 	}
 
 	builder := s.client.Workspace.
 		UpdateOneID(workspaceID).
 		SetNillableName(bodyData.Name).
-		SetSlug(slug).
+		SetNillableImagePath(filePath).
 		SetNillableImageURL(imageURL)
 
-	updatedWrokspace, err := builder.Save(ctx)
+	if slug != "" {
+		builder.SetSlug(slug)
+	}
+
+	updated, err := builder.Save(ctx)
 	if err != nil {
 		if file != nil && filePath != nil {
 			_ = s.fileUploadService.DeleteImage(ctx, *filePath)
@@ -200,9 +230,13 @@ func (s *workspaceService) Update(
 		return res.ErrorResponse[*dto.UpdateWorkspaceResponse]("failed to update workspace", err)
 	}
 
+	if shouldDeleteOldImage && workspace.ImageURL != nil && workspace.ImagePath != nil {
+		_ = s.fileUploadService.DeleteImage(ctx, *workspace.ImagePath)
+	}
+
 	return res.SuccessResponse(
 		&dto.UpdateWorkspaceResponse{
-			ID: updatedWrokspace.ID,
+			ID: updated.ID,
 		},
 		"workspace is updated successfully!",
 	)

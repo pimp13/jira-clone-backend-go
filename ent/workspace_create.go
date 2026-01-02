@@ -49,6 +49,20 @@ func (_c *WorkspaceCreate) SetNillableImageURL(v *string) *WorkspaceCreate {
 	return _c
 }
 
+// SetImagePath sets the "image_path" field.
+func (_c *WorkspaceCreate) SetImagePath(v string) *WorkspaceCreate {
+	_c.mutation.SetImagePath(v)
+	return _c
+}
+
+// SetNillableImagePath sets the "image_path" field if the given value is not nil.
+func (_c *WorkspaceCreate) SetNillableImagePath(v *string) *WorkspaceCreate {
+	if v != nil {
+		_c.SetImagePath(*v)
+	}
+	return _c
+}
+
 // SetInviteCode sets the "invite_code" field.
 func (_c *WorkspaceCreate) SetInviteCode(v string) *WorkspaceCreate {
 	_c.mutation.SetInviteCode(v)
@@ -256,6 +270,10 @@ func (_c *WorkspaceCreate) createSpec() (*Workspace, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ImageURL(); ok {
 		_spec.SetField(workspace.FieldImageURL, field.TypeString, value)
 		_node.ImageURL = &value
+	}
+	if value, ok := _c.mutation.ImagePath(); ok {
+		_spec.SetField(workspace.FieldImagePath, field.TypeString, value)
+		_node.ImagePath = &value
 	}
 	if value, ok := _c.mutation.InviteCode(); ok {
 		_spec.SetField(workspace.FieldInviteCode, field.TypeString, value)

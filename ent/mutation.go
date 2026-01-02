@@ -40,6 +40,7 @@ type ProjectMutation struct {
 	id               *uuid.UUID
 	name             *string
 	image_url        *string
+	image_path       *string
 	is_active        *bool
 	description      *string
 	created_at       *time.Time
@@ -239,6 +240,55 @@ func (m *ProjectMutation) ImageURLCleared() bool {
 func (m *ProjectMutation) ResetImageURL() {
 	m.image_url = nil
 	delete(m.clearedFields, project.FieldImageURL)
+}
+
+// SetImagePath sets the "image_path" field.
+func (m *ProjectMutation) SetImagePath(s string) {
+	m.image_path = &s
+}
+
+// ImagePath returns the value of the "image_path" field in the mutation.
+func (m *ProjectMutation) ImagePath() (r string, exists bool) {
+	v := m.image_path
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImagePath returns the old "image_path" field's value of the Project entity.
+// If the Project object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProjectMutation) OldImagePath(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImagePath is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImagePath requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImagePath: %w", err)
+	}
+	return oldValue.ImagePath, nil
+}
+
+// ClearImagePath clears the value of the "image_path" field.
+func (m *ProjectMutation) ClearImagePath() {
+	m.image_path = nil
+	m.clearedFields[project.FieldImagePath] = struct{}{}
+}
+
+// ImagePathCleared returns if the "image_path" field was cleared in this mutation.
+func (m *ProjectMutation) ImagePathCleared() bool {
+	_, ok := m.clearedFields[project.FieldImagePath]
+	return ok
+}
+
+// ResetImagePath resets all changes to the "image_path" field.
+func (m *ProjectMutation) ResetImagePath() {
+	m.image_path = nil
+	delete(m.clearedFields, project.FieldImagePath)
 }
 
 // SetIsActive sets the "is_active" field.
@@ -495,12 +545,15 @@ func (m *ProjectMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProjectMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 8)
 	if m.name != nil {
 		fields = append(fields, project.FieldName)
 	}
 	if m.image_url != nil {
 		fields = append(fields, project.FieldImageURL)
+	}
+	if m.image_path != nil {
+		fields = append(fields, project.FieldImagePath)
 	}
 	if m.is_active != nil {
 		fields = append(fields, project.FieldIsActive)
@@ -529,6 +582,8 @@ func (m *ProjectMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case project.FieldImageURL:
 		return m.ImageURL()
+	case project.FieldImagePath:
+		return m.ImagePath()
 	case project.FieldIsActive:
 		return m.IsActive()
 	case project.FieldDescription:
@@ -552,6 +607,8 @@ func (m *ProjectMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldName(ctx)
 	case project.FieldImageURL:
 		return m.OldImageURL(ctx)
+	case project.FieldImagePath:
+		return m.OldImagePath(ctx)
 	case project.FieldIsActive:
 		return m.OldIsActive(ctx)
 	case project.FieldDescription:
@@ -584,6 +641,13 @@ func (m *ProjectMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetImageURL(v)
+		return nil
+	case project.FieldImagePath:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImagePath(v)
 		return nil
 	case project.FieldIsActive:
 		v, ok := value.(bool)
@@ -653,6 +717,9 @@ func (m *ProjectMutation) ClearedFields() []string {
 	if m.FieldCleared(project.FieldImageURL) {
 		fields = append(fields, project.FieldImageURL)
 	}
+	if m.FieldCleared(project.FieldImagePath) {
+		fields = append(fields, project.FieldImagePath)
+	}
 	if m.FieldCleared(project.FieldDescription) {
 		fields = append(fields, project.FieldDescription)
 	}
@@ -673,6 +740,9 @@ func (m *ProjectMutation) ClearField(name string) error {
 	case project.FieldImageURL:
 		m.ClearImageURL()
 		return nil
+	case project.FieldImagePath:
+		m.ClearImagePath()
+		return nil
 	case project.FieldDescription:
 		m.ClearDescription()
 		return nil
@@ -689,6 +759,9 @@ func (m *ProjectMutation) ResetField(name string) error {
 		return nil
 	case project.FieldImageURL:
 		m.ResetImageURL()
+		return nil
+	case project.FieldImagePath:
+		m.ResetImagePath()
 		return nil
 	case project.FieldIsActive:
 		m.ResetIsActive()
@@ -1636,6 +1709,7 @@ type WorkspaceMutation struct {
 	name            *string
 	slug            *string
 	image_url       *string
+	image_path      *string
 	invite_code     *string
 	created_at      *time.Time
 	updated_at      *time.Time
@@ -1873,6 +1947,55 @@ func (m *WorkspaceMutation) ImageURLCleared() bool {
 func (m *WorkspaceMutation) ResetImageURL() {
 	m.image_url = nil
 	delete(m.clearedFields, workspace.FieldImageURL)
+}
+
+// SetImagePath sets the "image_path" field.
+func (m *WorkspaceMutation) SetImagePath(s string) {
+	m.image_path = &s
+}
+
+// ImagePath returns the value of the "image_path" field in the mutation.
+func (m *WorkspaceMutation) ImagePath() (r string, exists bool) {
+	v := m.image_path
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImagePath returns the old "image_path" field's value of the Workspace entity.
+// If the Workspace object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WorkspaceMutation) OldImagePath(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImagePath is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImagePath requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImagePath: %w", err)
+	}
+	return oldValue.ImagePath, nil
+}
+
+// ClearImagePath clears the value of the "image_path" field.
+func (m *WorkspaceMutation) ClearImagePath() {
+	m.image_path = nil
+	m.clearedFields[workspace.FieldImagePath] = struct{}{}
+}
+
+// ImagePathCleared returns if the "image_path" field was cleared in this mutation.
+func (m *WorkspaceMutation) ImagePathCleared() bool {
+	_, ok := m.clearedFields[workspace.FieldImagePath]
+	return ok
+}
+
+// ResetImagePath resets all changes to the "image_path" field.
+func (m *WorkspaceMutation) ResetImagePath() {
+	m.image_path = nil
+	delete(m.clearedFields, workspace.FieldImagePath)
 }
 
 // SetInviteCode sets the "invite_code" field.
@@ -2134,7 +2257,7 @@ func (m *WorkspaceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WorkspaceMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 8)
 	if m.name != nil {
 		fields = append(fields, workspace.FieldName)
 	}
@@ -2143,6 +2266,9 @@ func (m *WorkspaceMutation) Fields() []string {
 	}
 	if m.image_url != nil {
 		fields = append(fields, workspace.FieldImageURL)
+	}
+	if m.image_path != nil {
+		fields = append(fields, workspace.FieldImagePath)
 	}
 	if m.invite_code != nil {
 		fields = append(fields, workspace.FieldInviteCode)
@@ -2170,6 +2296,8 @@ func (m *WorkspaceMutation) Field(name string) (ent.Value, bool) {
 		return m.Slug()
 	case workspace.FieldImageURL:
 		return m.ImageURL()
+	case workspace.FieldImagePath:
+		return m.ImagePath()
 	case workspace.FieldInviteCode:
 		return m.InviteCode()
 	case workspace.FieldCreatedAt:
@@ -2193,6 +2321,8 @@ func (m *WorkspaceMutation) OldField(ctx context.Context, name string) (ent.Valu
 		return m.OldSlug(ctx)
 	case workspace.FieldImageURL:
 		return m.OldImageURL(ctx)
+	case workspace.FieldImagePath:
+		return m.OldImagePath(ctx)
 	case workspace.FieldInviteCode:
 		return m.OldInviteCode(ctx)
 	case workspace.FieldCreatedAt:
@@ -2230,6 +2360,13 @@ func (m *WorkspaceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetImageURL(v)
+		return nil
+	case workspace.FieldImagePath:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImagePath(v)
 		return nil
 	case workspace.FieldInviteCode:
 		v, ok := value.(string)
@@ -2292,6 +2429,9 @@ func (m *WorkspaceMutation) ClearedFields() []string {
 	if m.FieldCleared(workspace.FieldImageURL) {
 		fields = append(fields, workspace.FieldImageURL)
 	}
+	if m.FieldCleared(workspace.FieldImagePath) {
+		fields = append(fields, workspace.FieldImagePath)
+	}
 	return fields
 }
 
@@ -2309,6 +2449,9 @@ func (m *WorkspaceMutation) ClearField(name string) error {
 	case workspace.FieldImageURL:
 		m.ClearImageURL()
 		return nil
+	case workspace.FieldImagePath:
+		m.ClearImagePath()
+		return nil
 	}
 	return fmt.Errorf("unknown Workspace nullable field %s", name)
 }
@@ -2325,6 +2468,9 @@ func (m *WorkspaceMutation) ResetField(name string) error {
 		return nil
 	case workspace.FieldImageURL:
 		m.ResetImageURL()
+		return nil
+	case workspace.FieldImagePath:
+		m.ResetImagePath()
 		return nil
 	case workspace.FieldInviteCode:
 		m.ResetInviteCode()

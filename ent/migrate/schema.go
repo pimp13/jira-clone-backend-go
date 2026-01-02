@@ -13,6 +13,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "name", Type: field.TypeString, Size: 195},
 		{Name: "image_url", Type: field.TypeString, Nullable: true},
+		{Name: "image_path", Type: field.TypeString, Nullable: true},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
@@ -27,7 +28,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "projects_workspaces_projects",
-				Columns:    []*schema.Column{ProjectsColumns[7]},
+				Columns:    []*schema.Column{ProjectsColumns[8]},
 				RefColumns: []*schema.Column{WorkspacesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -36,7 +37,7 @@ var (
 			{
 				Name:    "project_is_active_workspace_id_name",
 				Unique:  false,
-				Columns: []*schema.Column{ProjectsColumns[3], ProjectsColumns[7], ProjectsColumns[1]},
+				Columns: []*schema.Column{ProjectsColumns[4], ProjectsColumns[8], ProjectsColumns[1]},
 			},
 		},
 	}
@@ -76,6 +77,7 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 195},
 		{Name: "slug", Type: field.TypeString, Unique: true, Size: 195},
 		{Name: "image_url", Type: field.TypeString, Nullable: true},
+		{Name: "image_path", Type: field.TypeString, Nullable: true},
 		{Name: "invite_code", Type: field.TypeString, Unique: true, Size: 64},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -89,7 +91,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "workspaces_users_workspaces",
-				Columns:    []*schema.Column{WorkspacesColumns[7]},
+				Columns:    []*schema.Column{WorkspacesColumns[8]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -103,7 +105,7 @@ var (
 			{
 				Name:    "workspace_owner_id",
 				Unique:  false,
-				Columns: []*schema.Column{WorkspacesColumns[7]},
+				Columns: []*schema.Column{WorkspacesColumns[8]},
 			},
 		},
 	}

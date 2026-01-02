@@ -19,6 +19,8 @@ const (
 	FieldName = "name"
 	// FieldImageURL holds the string denoting the image_url field in the database.
 	FieldImageURL = "image_url"
+	// FieldImagePath holds the string denoting the image_path field in the database.
+	FieldImagePath = "image_path"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
 	// FieldDescription holds the string denoting the description field in the database.
@@ -47,6 +49,7 @@ var Columns = []string{
 	FieldID,
 	FieldName,
 	FieldImageURL,
+	FieldImagePath,
 	FieldIsActive,
 	FieldDescription,
 	FieldCreatedAt,
@@ -95,6 +98,11 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByImageURL orders the results by the image_url field.
 func ByImageURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldImageURL, opts...).ToFunc()
+}
+
+// ByImagePath orders the results by the image_path field.
+func ByImagePath(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldImagePath, opts...).ToFunc()
 }
 
 // ByIsActive orders the results by the is_active field.
