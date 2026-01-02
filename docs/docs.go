@@ -218,6 +218,41 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {}
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "[Workspace] {v1}"
+                ],
+                "parameters": [
+                    {
+                        "description": "request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/workspace.UpdateWorkspaceResponse"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "workspace id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
             }
         }
     },
@@ -288,6 +323,14 @@ const docTemplate = `{
                     "minLength": 3
                 },
                 "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "workspace.UpdateWorkspaceResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
                     "type": "string"
                 }
             }

@@ -48,6 +48,11 @@ definitions:
     required:
     - name
     type: object
+  workspace.UpdateWorkspaceResponse:
+    properties:
+      id:
+        type: string
+    type: object
 info:
   contact: {}
   description: This is a jira clone api docs.
@@ -167,6 +172,28 @@ paths:
       consumes:
       - application/json
       parameters:
+      - description: workspace id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - '[Workspace] {v1}'
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/workspace.UpdateWorkspaceResponse'
       - description: workspace id
         in: path
         name: id

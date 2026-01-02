@@ -40,7 +40,6 @@ type WorkspaceService interface {
 		bodyData dto.UpdateWorkspaceDto,
 		workspaceID uuid.UUID,
 		file *multipart.FileHeader,
-		userID uuid.UUID,
 	) *res.Response[*dto.UpdateWorkspaceResponse]
 }
 
@@ -170,7 +169,6 @@ func (s *workspaceService) Update(
 	bodyData dto.UpdateWorkspaceDto,
 	workspaceID uuid.UUID,
 	file *multipart.FileHeader,
-	userID uuid.UUID,
 ) *res.Response[*dto.UpdateWorkspaceResponse] {
 	var err error
 

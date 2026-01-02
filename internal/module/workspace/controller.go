@@ -2,7 +2,6 @@ package workspace
 
 import (
 	"errors"
-	"log"
 	"mime/multipart"
 	"net/http"
 
@@ -31,7 +30,8 @@ func (ctrl *WorkspaceController) Routes(r *echo.Group) {
 	router := r.Group("/workspace", ctrl.authMiddleware.SetAuthMiddleware)
 	router.GET("", ctrl.index)
 	router.POST("", ctrl.create)
-	router.POST("/:id", ctrl.showById)
+	router.GET("/:id", ctrl.showById)
+	router.PATCH("/:id", ctrl.update)
 }
 
 // @Tags		[Workspace] {v1}
@@ -98,7 +98,6 @@ func (ctrl *WorkspaceController) create(c echo.Context) error {
 	if validationErrs != nil {
 		return c.JSON(http.StatusBadRequest, validationErrs)
 	}
-	log.Println("BODY DATA =>", bodyData)
 
 	file, err := c.FormFile("image")
 	var uploadedFile *multipart.FileHeader = nil
@@ -109,6 +108,44 @@ func (ctrl *WorkspaceController) create(c echo.Context) error {
 	}
 
 	resp := ctrl.workspaceService.Create(c.Request().Context(), bodyData, uploadedFile, user.ID)
+
+	return c.JSON(resp.StatusCode, resp)
+}
+
+// @Tags		[Workspace] {v1}
+// @Accept		json
+// @Produce	json
+// @Param		request	body	UpdateWorkspaceResponse	true	"request body"
+// @Param		id		path	string					true	"workspace id"
+// @Router		/v1/workspace/{id} [PATCH]
+// @Security	ApiKeyAuth
+func (ctrl *WorkspaceController) update(c echo.Context) error {
+	workspaceId, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return res.JSON(c, res.ErrorMessage[struct{}](
+			"bad request param",
+			http.StatusUnauthorized,
+		))
+	}
+
+	var bodyData workspace.UpdateWorkspaceDto
+	validationErrs, err := res.ValidateRequest(c, &bodyData)
+	if err != nil {
+		return res.JSON(c, res.ErrorResponse[struct{}]("failed to parse body data", err))
+	}
+	if validationErrs != nil {
+		return c.JSON(http.StatusBadRequest, validationErrs)
+	}
+
+	file, err := c.FormFile("image")
+	var uploadedFile *multipart.FileHeader = nil
+	if err == nil {
+		uploadedFile = file
+	} else if !errors.Is(err, http.ErrMissingFile) {
+		return res.JSON(c, res.ErrorResponse[struct{}]("file is bad way", err))
+	}
+
+	resp := ctrl.workspaceService.Update(c.Request().Context(), bodyData, workspaceId, uploadedFile)
 
 	return c.JSON(resp.StatusCode, resp)
 }
