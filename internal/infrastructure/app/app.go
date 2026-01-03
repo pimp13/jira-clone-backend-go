@@ -169,7 +169,7 @@ func (a *App) setupServices() {
 	authCtrl.Routes(api_v1)
 
 	// Workspace
-	wsSvc := workspace.NewWorkspaceService(a.entClient)
+	wsSvc := workspace.NewWorkspaceService(a.entClient, a.logger)
 	wsCtrl := workspace.NewWorkspaceController(wsSvc, authMiddleware)
 	wsCtrl.Routes(api_v1)
 

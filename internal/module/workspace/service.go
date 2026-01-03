@@ -9,9 +9,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/pimp13/jira-clone-backend-go/ent"
+	entMembership "github.com/pimp13/jira-clone-backend-go/ent/membership"
 	entWorkspace "github.com/pimp13/jira-clone-backend-go/ent/workspace"
 	"github.com/pimp13/jira-clone-backend-go/internal/module/fileupload"
 	dto "github.com/pimp13/jira-clone-backend-go/internal/module/workspace/dto"
+	"github.com/pimp13/jira-clone-backend-go/pkg/logger"
 	"github.com/pimp13/jira-clone-backend-go/pkg/res"
 	"github.com/pimp13/jira-clone-backend-go/pkg/util"
 )
@@ -20,13 +22,13 @@ type WorkspaceService interface {
 	Index(
 		ctx context.Context,
 		userID uuid.UUID,
-	) *res.Response[[]*dto.WorkspaceResponse]
+	) *res.Response[[]*WorkspaceResponse]
 
 	ShowById(
 		ctx context.Context,
 		workspaceId uuid.UUID,
 		userID uuid.UUID,
-	) *res.Response[*dto.WorkspaceResponse]
+	) *res.Response[*WorkspaceResponse]
 
 	Create(
 		ctx context.Context,
@@ -45,12 +47,14 @@ type WorkspaceService interface {
 
 type workspaceService struct {
 	client            *ent.Client
+	logger            logger.Logger
 	fileUploadService fileupload.FileUploadService
 }
 
-func NewWorkspaceService(client *ent.Client) WorkspaceService {
+func NewWorkspaceService(client *ent.Client, logger logger.Logger) WorkspaceService {
 	return &workspaceService{
 		client:            client,
+		logger:            logger,
 		fileUploadService: fileupload.NewFileUploadService("public/uploads/workspace", ""),
 	}
 }
@@ -58,34 +62,44 @@ func NewWorkspaceService(client *ent.Client) WorkspaceService {
 func (s *workspaceService) Index(
 	ctx context.Context,
 	userID uuid.UUID,
-) *res.Response[[]*dto.WorkspaceResponse] {
+) *res.Response[[]*WorkspaceResponse] {
 	initData, err := s.client.Workspace.Query().
+		Where(
+			entWorkspace.HasMembershipsWith(
+				entMembership.UserIDEQ(userID),
+				entMembership.StatusEQ(entMembership.StatusActive),
+			),
+		).
+		WithMemberships(func(mq *ent.MembershipQuery) {
+			mq.Where(entMembership.StatusEQ(entMembership.StatusActive)).
+				WithUser()
+		}).
 		Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
 		All(ctx)
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return res.ErrorMessage[[]*dto.WorkspaceResponse](
+			return res.ErrorMessage[[]*WorkspaceResponse](
 				"workspace is not found",
 				http.StatusBadRequest,
 			)
 		}
-		return res.ErrorMessage[[]*dto.WorkspaceResponse]("failed to get workspace")
+		return res.ErrorMessage[[]*WorkspaceResponse]("failed to get workspace")
 	}
 
-	_ = make([]*dto.WorkspaceResponse, 0, len(initData))
-	// for _, ws := range initData {
-	// 	finalData = append(finalData, ToWorkspaceResponse(ws))
-	// }
+	finalData := make([]*WorkspaceResponse, 0, len(initData))
+	for _, ws := range initData {
+		finalData = append(finalData, ToWorkspaceResponse(ws))
+	}
 
-	return res.SuccessResponse([]*dto.WorkspaceResponse{}, "")
+	return res.SuccessResponse(finalData, "")
 }
 
 func (s *workspaceService) ShowById(
 	ctx context.Context,
 	workspaceId uuid.UUID,
 	userID uuid.UUID,
-) *res.Response[*dto.WorkspaceResponse] {
+) *res.Response[*WorkspaceResponse] {
 	// initData, err := s.client.Workspace.Query().
 	// 	Where(entWorkspace.IDEQ(workspaceId)).
 	// 	Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
@@ -155,6 +169,19 @@ func (s *workspaceService) Create(
 			_ = s.fileUploadService.DeleteImage(ctx, *filePath)
 		}
 		return res.ErrorResponse[*dto.CreateWorkspaceResponse]("failed to save workspace", err)
+	}
+
+	_, err = s.client.Membership.Create().
+		SetWorkspaceID(newWorkspace.ID).
+		SetUserID(userID).
+		SetRole(entMembership.RoleOwner).
+		SetStatus(entMembership.StatusActive).
+		Save(ctx)
+	if err != nil {
+		return res.ErrorResponse[*dto.CreateWorkspaceResponse](
+			"failed to add member for workspace",
+			err,
+		)
 	}
 
 	return res.SuccessResponse(
