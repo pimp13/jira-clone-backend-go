@@ -100,29 +100,27 @@ func (s *workspaceService) ShowById(
 	workspaceId uuid.UUID,
 	userID uuid.UUID,
 ) *res.Response[*WorkspaceResponse] {
-	// initData, err := s.client.Workspace.Query().
-	// 	Where(entWorkspace.IDEQ(workspaceId)).
-	// 	Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
-	// 	Only(ctx)
+	initData, err := s.client.Workspace.Query().
+		Where(entWorkspace.IDEQ(workspaceId)).
+		WithMemberships(func(mq *ent.MembershipQuery) {
+			mq.Where(entMembership.StatusEQ(entMembership.StatusActive)).
+				WithUser()
+		}).
+		Order(entWorkspace.ByCreatedAt(sql.OrderDesc())).
+		Only(ctx)
 
-	// if err != nil {
-	// 	if ent.IsNotFound(err) {
-	// 		return res.ErrorMessage[*dto.WorkspaceResponse](
-	// 			"workspace is not found",
-	// 			http.StatusBadRequest,
-	// 		)
-	// 	}
-	// 	return res.ErrorMessage[*dto.WorkspaceResponse]("failed to get workspace")
-	// }
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return res.ErrorMessage[*WorkspaceResponse](
+				"workspace is not found",
+				http.StatusBadRequest,
+			)
+		}
+		return res.ErrorMessage[*WorkspaceResponse]("failed to get workspace")
+	}
 
-	// // finalData := ToWorkspaceResponse(initData)
-	// return res.SuccessResponse(*dto.WorkspaceResponse{
-	// 	ID: initData.ID,
-	// 	Name: initData.Name,
-	// 	Slug: initData.Slug,
-
-	// }, "")
-	return nil
+	finalData := ToWorkspaceResponse(initData)
+	return res.SuccessResponse(finalData, "")
 }
 
 func (s *workspaceService) Create(
@@ -267,6 +265,17 @@ func (s *workspaceService) Update(
 		},
 		"workspace is updated successfully!",
 	)
+}
+
+func (s *workspaceService) Delete(
+	ctx context.Context,
+	workspaceID uuid.UUID,
+	userID uuid.UUID,
+) *res.Response[struct{}] {
+	if err := s.client.Workspace.DeleteOneID(workspaceID).Exec(ctx); err != nil {
+		return res.SuccessMessage("workspace is deleted successfully!")
+	}
+	return res.ErrorMessage[struct{}]()
 }
 
 func (s *workspaceService) generateUniqueSlug(
