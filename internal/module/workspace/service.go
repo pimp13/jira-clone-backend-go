@@ -272,10 +272,30 @@ func (s *workspaceService) Delete(
 	workspaceID uuid.UUID,
 	userID uuid.UUID,
 ) *res.Response[struct{}] {
-	if err := s.client.Workspace.DeleteOneID(workspaceID).Exec(ctx); err != nil {
-		return res.SuccessMessage("workspace is deleted successfully!")
+	workspace, err := s.client.Workspace.
+		Query().
+		Where(entWorkspace.IDEQ(workspaceID)).
+		Select(
+			entWorkspace.FieldID,
+			entWorkspace.FieldImageURL,
+			entWorkspace.FieldImagePath,
+		).First(ctx)
+
+	if err != nil {
+		return res.ErrorMessage[struct{}]("workspace is not found", http.StatusNotFound)
 	}
-	return res.ErrorMessage[struct{}]()
+
+	if err := s.client.Workspace.DeleteOneID(workspace.ID).Exec(ctx); err != nil {
+		return res.ErrorResponse[struct{}]("failed to delete worksapce", err)
+	}
+
+	if workspace.ImagePath != nil {
+		if err := s.fileUploadService.DeleteImage(ctx, *workspace.ImagePath); err != nil {
+			return res.ErrorResponse[struct{}]("failed to delete workspace image", err)
+		}
+	}
+
+	return res.SuccessMessage("delete image is successfully")
 }
 
 func (s *workspaceService) generateUniqueSlug(

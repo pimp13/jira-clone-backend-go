@@ -149,3 +149,6 @@ func (ctrl *WorkspaceController) update(c echo.Context) error {
 
 	return c.JSON(resp.StatusCode, resp)
 }
+
+
+
