@@ -44,6 +44,9 @@ type App struct {
 
 	// Configuration and ENV global variables
 	cfg *config.Config
+
+	// Is production for check status running server
+	isProduction bool
 }
 
 func NewApp() (*App, error) {
@@ -64,13 +67,14 @@ func NewApp() (*App, error) {
 		Msg("Application initialized!")
 
 	return &App{
-		port:      cfg.App.Port,
-		prefix:    "/api",
-		version:   "v1",
-		logger:    logger,
-		engine:    e,
-		entClient: entClient,
-		cfg:       cfg,
+		port:         cfg.App.Port,
+		prefix:       "/api",
+		version:      "v1",
+		logger:       logger,
+		engine:       e,
+		entClient:    entClient,
+		cfg:          cfg,
+		isProduction: isProduction,
 	}, nil
 }
 
@@ -141,7 +145,7 @@ func (a *App) setupMiddlewares() {
 		MaxAge:           300,
 	}))
 
-	if a.cfg.App.Env == "development" {
+	if !a.isProduction {
 		a.engine.Use(middleware.Logger())
 	}
 	a.engine.Use(middleware.Recover())
