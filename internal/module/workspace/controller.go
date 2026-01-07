@@ -37,6 +37,15 @@ func (ctrl *WorkspaceController) Routes(r *echo.Group) {
 // @Tags		[Workspace] {v1}
 // @Accept		json
 // @Produce	json
+// @Router		/v1/workspace/http-client [GET]
+// @Security	ApiKeyAuth
+// func (ctrl *WorkspaceController) httpClient(c echo.Context) error {
+
+// }
+
+// @Tags		[Workspace] {v1}
+// @Accept		json
+// @Produce	json
 // @Router		/v1/workspace [GET]
 // @Security	ApiKeyAuth
 func (ctrl *WorkspaceController) index(c echo.Context) error {
