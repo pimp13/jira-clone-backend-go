@@ -1,13 +1,14 @@
 package main
 
 import (
+	"crypto/sha256"
 	"log"
-	"net/http"
 )
 
 func main() {
-	fs := http.FileServer(http.Dir("./"))
-
-	log.Println("Server running...")
-	log.Fatal(http.ListenAndServe(":8585", fs))
+	s := sha256.New()
+	r, _ := s.Write([]byte("hefffllo"))
+	e := s.Sum([]byte("dfdfd"))
+	f := s.Size()
+	log.Println(r, e, f)
 }
