@@ -34,11 +34,11 @@ func (ctrl *WorkspaceController) Routes(r *echo.Group) {
 	router.PATCH("/:id", ctrl.update)
 }
 
-// @Tags		[Workspace] {v1}
-// @Accept		json
-// @Produce	json
-// @Router		/v1/workspace/http-client [GET]
-// @Security	ApiKeyAuth
+//	@Tags		[Workspace] {v1}
+//	@Accept		json
+//	@Produce	json
+//	@Router		/v1/workspace/http-client [GET]
+//	@Security	ApiKeyAuth
 // func (ctrl *WorkspaceController) httpClient(c echo.Context) error {
 
 // }

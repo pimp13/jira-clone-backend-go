@@ -1,5 +1,5 @@
 MAIN_FILE = ./cmd/server/main.go
-BUILD_FILE = ./bin/server.exe
+BUILD_FILE = ./bin/app
 SWAGGER_DOCS_DIR = ./docs
 WIRE_LOCATION = ./internal/infrastructure/di
 
@@ -28,7 +28,7 @@ swag: swag-fmt ## Create swagger document
 
 build: swag ## Build application binary and swagger docs (includes swag-fmt)
 	@echo "Building application..."
-	@go build -o $(BUILD_FILE) $(MAIN_FILE)
+	@go build -ldflags="-s -w" -o $(BUILD_FILE) $(MAIN_FILE)
 
 swag-fmt: gofmt ## Format swagger docs
 	@echo "Formatting swagger docs"
