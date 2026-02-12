@@ -192,6 +192,25 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/v1/workspace/all": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "[Workspace] {v1}"
+                ],
+                "responses": {}
+            }
+        },
         "/v1/workspace/{id}": {
             "get": {
                 "security": [

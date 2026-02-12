@@ -210,4 +210,15 @@ paths:
       - ApiKeyAuth: []
       tags:
       - '[Workspace] {v1}'
+  /v1/workspace/all:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - '[Workspace] {v1}'
 swagger: "2.0"

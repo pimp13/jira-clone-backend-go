@@ -32,16 +32,18 @@ func (ctrl *WorkspaceController) Routes(r *echo.Group) {
 	router.POST("", ctrl.create)
 	router.GET("/:id", ctrl.showById)
 	router.PATCH("/:id", ctrl.update)
+	router.GET("/all", ctrl.all)
 }
 
-//	@Tags		[Workspace] {v1}
-//	@Accept		json
-//	@Produce	json
-//	@Router		/v1/workspace/http-client [GET]
-//	@Security	ApiKeyAuth
-// func (ctrl *WorkspaceController) httpClient(c echo.Context) error {
-
-// }
+// @Tags		[Workspace] {v1}
+// @Accept		json
+// @Produce	json
+// @Router		/v1/workspace/all [GET]
+// @Security	ApiKeyAuth
+func (ctrl *WorkspaceController) all(c echo.Context) error {
+	resp := ctrl.workspaceService.All(c.Request().Context())
+	return c.JSON(resp.StatusCode, resp)
+}
 
 // @Tags		[Workspace] {v1}
 // @Accept		json
