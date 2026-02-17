@@ -157,7 +157,7 @@ func (a *App) setupRoutes() {
 	// Swagger
 	a.engine.GET("/api/docs/*", echoSwagger.WrapHandler)
 	a.engine.GET("/api/docs", func(c echo.Context) error {
-		return c.Redirect(http.StatusTemporaryRedirect, "/jira/api/docs/index.html")
+		return c.Redirect(http.StatusTemporaryRedirect, "/api/docs/index.html")
 	})
 }
 
