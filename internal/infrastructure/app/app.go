@@ -146,7 +146,7 @@ func (a *App) setupMiddlewares() {
 	}))
 
 	if !a.isProduction {
-		a.engine.Use(middleware.Logger())
+		a.engine.Use(middleware.RequestLogger())
 	}
 	a.engine.Use(middleware.Recover())
 
@@ -154,11 +154,14 @@ func (a *App) setupMiddlewares() {
 }
 
 func (a *App) setupRoutes() {
-	// Swagger
-	a.engine.GET("/api/docs/*", echoSwagger.WrapHandler)
-	a.engine.GET("/api/docs", func(c echo.Context) error {
-		return c.Redirect(http.StatusTemporaryRedirect, "/api/docs/index.html")
-	})
+	// Global routes
+	if !a.isProduction {
+		// Swagger
+		a.engine.GET("/api/docs/*", echoSwagger.WrapHandler)
+		a.engine.GET("/api/docs", func(c echo.Context) error {
+			return c.Redirect(http.StatusTemporaryRedirect, "/api/docs/index.html")
+		})
+	}
 }
 
 func (a *App) setupServices() {
