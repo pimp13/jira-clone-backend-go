@@ -68,7 +68,7 @@ func NewApp() (*App, error) {
 
 	return &App{
 		port:         cfg.App.Port,
-		prefix:       "/jira/api",
+		prefix:       "/api",
 		version:      "v1",
 		logger:       logger,
 		engine:       e,
@@ -155,8 +155,8 @@ func (a *App) setupMiddlewares() {
 
 func (a *App) setupRoutes() {
 	// Swagger
-	a.engine.GET("/jira/api/docs/*", echoSwagger.WrapHandler)
-	a.engine.GET("/jira/api/docs", func(c echo.Context) error {
+	a.engine.GET("/api/docs/*", echoSwagger.WrapHandler)
+	a.engine.GET("/api/docs", func(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, "/jira/api/docs/index.html")
 	})
 }

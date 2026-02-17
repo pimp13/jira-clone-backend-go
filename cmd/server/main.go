@@ -11,7 +11,7 @@ import (
 // @title			jira clone api
 // @description	This is a jira clone api docs.
 // @version		1.0
-// @BasePath		/jira/api
+// @BasePath		/api
 func main() {
 	application, err := app.NewApp()
 	if err != nil {
