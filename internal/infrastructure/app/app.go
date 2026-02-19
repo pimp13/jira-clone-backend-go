@@ -1,6 +1,7 @@
 package app
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"net/http"
@@ -49,7 +50,7 @@ type App struct {
 	isProduction bool
 }
 
-func NewApp() (*App, error) {
+func NewApp(port uint) (*App, error) {
 	cfg := config.NewConfig()
 	isProduction := cfg.App.Env == "production"
 
@@ -66,8 +67,10 @@ func NewApp() (*App, error) {
 		Bool("IsProductionMode", isProduction).
 		Msg("Application initialized!")
 
+	finalPort := cmp.Or(port, cfg.App.Port, 7070)
+
 	return &App{
-		port:         cfg.App.Port,
+		port:         finalPort,
 		prefix:       "/api",
 		version:      "v1",
 		logger:       logger,

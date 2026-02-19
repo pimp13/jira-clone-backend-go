@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 
@@ -13,7 +14,12 @@ import (
 // @version		1.0
 // @BasePath		/api
 func main() {
-	application, err := app.NewApp()
+	var port uint
+	flag.UintVar(&port, "port", 0, "Application port override")
+	flag.UintVar(&port, "p", 0, "Application port override (shorthand)")
+	flag.Parse()
+
+	application, err := app.NewApp(port)
 	if err != nil {
 		log.Fatalf("failed to create app: %v", err)
 	}
